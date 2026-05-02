@@ -1,0 +1,192 @@
+/* ===== TipTap 编辑器基础样式 ===== */
+.tiptap {
+    outline: none;
+    min-height: 60vh;
+    font-size: 1.125rem;
+    line-height: 1.75;
+    color: #3f3f46;
+}
+.tiptap h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 1rem 0;
+}
+.tiptap h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0.75rem 0;
+}
+.tiptap h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+.tiptap p {
+    margin: 0.5rem 0;
+}
+.tiptap ul,
+.tiptap ol {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+.tiptap code {
+    background: #f4f4f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+.tiptap pre {
+    background: #f7f6f3;
+    color: #37352f;
+    padding: 2rem 1rem 1rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #e3e2de;
+    margin: 0.75rem 0;
+    position: relative;
+    font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    overflow-x: auto;
+}
+.tiptap pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+/* ===== 语法高亮配色（Notion 浅色风格）===== */
+.tiptap pre .hljs-keyword {
+    color: #0550ae;
+} /* 关键字：蓝色 (const, if, return) */
+.tiptap pre .hljs-string {
+    color: #0b6e4f;
+} /* 字符串：深绿 */
+.tiptap pre .hljs-number {
+    color: #0550ae;
+} /* 数字：蓝色 */
+.tiptap pre .hljs-built_in {
+    color: #c0392b;
+} /* 内置函数：红色，同关键字 (useState, console) */
+.tiptap pre .hljs-function,
+.tiptap pre .hljs-title {
+    color: #c0392b;
+} /* 函数名：红色，同关键字 (useRef, useEffect) */
+.tiptap pre .hljs-params {
+    color: #37352f;
+} /* 参数：正文色 */
+.tiptap pre .hljs-comment {
+    color: #6b7280;
+    font-style: italic;
+} /* 注释：灰色斜体 */
+.tiptap pre .hljs-variable {
+    color: #c0392b;
+} /* 变量：红色 */
+.tiptap pre .hljs-attr {
+    color: #0550ae;
+} /* 属性名：蓝色 */
+.tiptap pre .hljs-tag {
+    color: #116329;
+} /* 标签：绿色 (HTML) */
+.tiptap pre .hljs-name {
+    color: #116329;
+} /* 标签名：绿色 */
+.tiptap pre .hljs-type {
+    color: #0550ae;
+} /* 类型：蓝色 (TypeScript) */
+.tiptap pre .hljs-selector-class {
+    color: #0b6e4f;
+} /* CSS 类选择器：绿色 */
+.tiptap pre .hljs-selector-tag {
+    color: #116329;
+} /* CSS 标签选择器：绿色 */
+.tiptap pre .hljs-property {
+    color: #0550ae;
+} /* 属性：蓝色 */
+.tiptap pre .hljs-literal {
+    color: #0550ae;
+} /* 字面量：蓝色 (true, false, null) */
+.tiptap pre .hljs-operator {
+    color: #c0392b;
+} /* 运算符：红色 */
+.tiptap pre .hljs-punctuation {
+    color: #9b9a97;
+} /* 标点：浅灰 */
+
+/* ===== 代码块语言选择器 ===== */
+.code-block-wrapper {
+    position: relative;
+}
+.code-block-language-select {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    background: transparent;
+    border: 1px solid #e3e2de;
+    border-radius: 4px;
+    color: #9b9a97;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.25rem;
+    cursor: pointer;
+    z-index: 1;
+    font-family: -apple-system, sans-serif;
+}
+.code-block-language-select:hover {
+    color: #37352f;
+    border-color: #c0bfbc;
+}
+.code-block-language-select:focus {
+    outline: none;
+    border-color: #2eaadc;
+    color: #37352f;
+}
+.code-block-language-select option {
+    background: #ffffff;
+    color: #37352f;
+}
+
+/* ===== 引用块 ===== */
+.tiptap blockquote {
+    border-left: 3px solid #a1a1aa;
+    padding-left: 1rem;
+    color: #71717a;
+}
+
+/* ===== 链接样式 ===== */
+.tiptap a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.tiptap a:hover {
+    color: #1d4ed8;
+}
+.bubble-menu {
+    display: flex;
+    gap: 2px;
+    background: #1e1e1e;
+    border-radius: 6px;
+    padding: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.bubble-menu button {
+    color: #ccc;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.bubble-menu button:hover {
+    background: #333;
+    color: #fff;
+}
+.bubble-menu button.is-active {
+    background: #444;
+    color: #fff;
+}
