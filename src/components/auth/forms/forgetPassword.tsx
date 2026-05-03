@@ -3,7 +3,7 @@
 import { useTransition, Suspense, useMemo, useCallback, FC } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useSignUpForm, useSignUpSubmit, useSendVerificationOTP } from "../hooks";
+import { useForgetPasswordForm, useForgetPasswordSubmit, useSendForgetPasswordOTP } from "../hooks";
 
 import {
     Form,
@@ -18,15 +18,22 @@ import { Button } from "@/components/ui/button";
 import { AuthFormSkeleton } from "../skeleton";
 
 function FormComponent() {
-    const form = useSignUpForm();
-    const submitHandler = useSignUpSubmit();
+    const form = useForgetPasswordForm();
+    const submitHandler = useForgetPasswordSubmit();
     const [isPending, startTransition] = useTransition();
-    const username = form.watch('username');
-    const email = form.watch('email');
-    const { sendOTP, buttonText, canSend } = useSendVerificationOTP(email);
-    
-    const searchParams = useSearchParams();
+    const credential = form.watch('credential');
+    const { sendOTP, buttonText, canSend } = useSendForgetPasswordOTP(credential);
 
+    const disableSendBtn = useMemo(
+        () => !credential || !!form.formState.errors.credential || form.formState.isSubmitting || isPending || !canSend,
+        [credential, form.formState.errors.credential, form.formState.isSubmitting, isPending, canSend],
+    );
+  
+    const sendOTPHandler = useCallback(async () => {
+        if (!disableSendBtn) await sendOTP(credential);
+    }, [disableSendBtn, credential, sendOTP]);
+
+    const searchParams = useSearchParams();
     const signinUrl = useMemo(() => {
         let url = '/auth/signin';
         const params = new URLSearchParams();
@@ -39,30 +46,6 @@ function FormComponent() {
         return url;
     }, [searchParams]);
 
-    const disableSendBtn = useMemo(() => {
-        return (
-            !username ||
-            !email ||
-            !!form.formState.errors.username ||
-            !!form.formState.errors.email ||
-            form.formState.isSubmitting ||
-            isPending ||
-            !canSend
-        );
-    }, [
-        username,
-        email,
-        form.formState.errors.username,
-        form.formState.errors.email,
-        form.formState.isSubmitting,
-        isPending,
-        canSend
-    ]);
-
-    const sendOTPHandler = useCallback(async () => {
-        if (!disableSendBtn) await sendOTP(email);
-    }, [disableSendBtn, email, sendOTP]);
-
     const onSubmit = form.handleSubmit((values) => {
         startTransition(() => {
             submitHandler(values as Parameters<typeof submitHandler>[0]);
@@ -74,37 +57,15 @@ function FormComponent() {
             <form onSubmit={onSubmit} className="space-y-5">
                 <FormField
                     control={form.control}
-                    name="username"
+                    name="credential"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel className="text-sm font-medium text-[#5e5448]">
-                                用户名
+                                账号 / 邮箱
                             </FormLabel>
                             <FormControl>
                                 <Input
-                                    placeholder="起个好听的名字（至少 3 位）"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
-                                    disabled={form.formState.isSubmitting || isPending}
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">
-                                邮箱
-                            </FormLabel>
-                            <FormControl>
-                                <Input
-                                    type="email"
-                                    placeholder="your@email.com"
+                                    placeholder="请输入您的用户名或邮箱地址"
                                     className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
@@ -154,12 +115,12 @@ function FormComponent() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel className="text-sm font-medium text-[#5e5448]">
-                                密码
+                                新密码
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
-                                    placeholder="请输入密码（至少 6 位）"
+                                    placeholder="请输入新密码（至少 6 位）"
                                     className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
@@ -176,12 +137,12 @@ function FormComponent() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel className="text-sm font-medium text-[#5e5448]">
-                                确认密码
+                                确认新密码
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
-                                    placeholder="请再次输入密码"
+                                    placeholder="请再次输入新密码"
                                     className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
@@ -198,7 +159,7 @@ function FormComponent() {
                         disabled={form.formState.isSubmitting || isPending}
                         className="w-full bg-[#1f1d1a] hover:bg-[#3a342e] text-white rounded-xl shadow-sm h-11 font-medium transition-colors"
                     >
-                        {(form.formState.isSubmitting || isPending) ? "注册中..." : "立即注册"}
+                        {(form.formState.isSubmitting || isPending) ? "提交中..." : "重置密码"}
                     </Button>
                     <Button 
                         asChild 
@@ -213,7 +174,7 @@ function FormComponent() {
     );
 }
 
-export const SignUpForm: FC = () => (
+export const ForgetPasswordForm: FC = () => (
     <Suspense fallback={<AuthFormSkeleton />}>
         <FormComponent />
     </Suspense>

@@ -33,5 +33,15 @@ app.get(
     }),
 );
 
+import { beforeServer } from "./common/app";
+
+// 包装成异步初始化逻辑
+export const serverInit = async () => {
+    await beforeServer();
+    return { app, routes };
+};
+
+export const serverRPC = serverInit();
+
 type AppType = typeof routes;
 export { app, type AppType };

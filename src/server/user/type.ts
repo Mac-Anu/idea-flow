@@ -8,6 +8,7 @@ import {
     sessionSchema,
     forgetPasswordRequestSchema,
     sendOTPResponseSchema,
+    otpRateLimitRequestSchema,
 } from "./schema";
 import { authRoutes } from "./routes/auth";
 
@@ -46,3 +47,13 @@ export interface EmailOTPPayload {
     email: string;
     code: string;
 }
+// 注册请求类型
+export type SignupRequest = z.infer<typeof signUpRequestSchema>;
+
+/**
+ * 发送验证码响应类型
+ */
+export type sendOTPResponse = z.infer<typeof sendOTPResponseSchema>;
+
+// 查询频率限制请求类型
+export type OTPRateLimitRequest = z.infer<typeof otpRateLimitRequestSchema>;

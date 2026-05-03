@@ -23,9 +23,7 @@ export default function Home() {
                         <div className="w-8 h-8 bg-[#1f1d1a] rounded-xl flex items-center justify-center shadow-sm">
                             <Sparkles className="w-4 h-4 text-[#f3ead8]" />
                         </div>
-                        <span className="text-lg font-semibold tracking-tight text-[#1f1d1a]">
-                            IdeaFlow
-                        </span>
+                        <span className="text-lg font-semibold tracking-tight text-[#1f1d1a]">IdeaFlow</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <Link href="/articles">

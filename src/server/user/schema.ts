@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { authConfig } from "@/config/auth";
+import { EmailOTPType } from "./constants";
 
 // 用户登录请求 schema
 export const signInRequestSchema = z.object({
@@ -81,11 +82,32 @@ export const sendForgetPasswordOTPRequestSchema = z.object({
 
 // 发送验证码响应 schema
 export const sendOTPResponseSchema = z.object({
+    /**
+     * 响应消息
+     */
     message: z.string(),
+    /**
+     * 是否可以继续发送（在发送频率限制内则为false）
+     */
+    canSend: z.boolean(),
+    /**
+     * 发送频率限制时间
+     */
+    remainingTime: z.number().optional(),
+    /**
+     * 下一次可发送的时间戳
+     */
+    nextSendTime: z.number().optional(),
 });
 
 // 检测用户是否存在请求 schema
 export const checkUserExistsSchema = sendForgetPasswordOTPRequestSchema;
+
+// 查询发送频率限制请求 schema
+export const otpRateLimitRequestSchema = z.object({
+    credential: authConfig.validates.username.or(z.email()),
+    type: z.enum(Object.values(EmailOTPType) as [string, ...string[]]),
+});
 
 // 检查用户名唯一性请求 schema
 export const checkUsernameUniqueSchema = z.object({
@@ -109,4 +131,3 @@ export const signUpResponseSchema = z.object({
     result: z.boolean(),
     user: userSchema,
 });
-

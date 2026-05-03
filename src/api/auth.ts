@@ -1,14 +1,18 @@
-import { usernameClient } from "better-auth/client/plugins";
+import { usernameClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { isNil } from "lodash";
 import { appConfig } from "@/config/app";
-import type { SignInRequest, User } from "@/server/user/type";
+import type { SignInRequest, SignUpRequest, User, AuthApiType, ResetPasswordRequest, OTPRateLimitRequest } from "@/server/user/type";
+import { buildClient, fetchApi } from "@/lib/hono";
 
-// Better Auth 官方客户端（支持用户名登录）
+// Hono RPC 客户端
+export const authFetchClient = buildClient<AuthApiType>("/auth");
+
+// Better Auth 官方客户端
 export const authClient = createAuthClient({
     baseURL: appConfig.baseUrl,
     basePath: "/api/auth",
-    plugins: [usernameClient()],
+    plugins: [usernameClient(), emailOTPClient()],
 });
 
 export const authApi = {
@@ -46,30 +50,72 @@ export const authApi = {
     },
 
     /**
-     * 用户注册
+     * 用户注册 (调用自定义后端接口)
      */
-    signUp: async (
-        data: typeof import("@/server/user/schema").signUpRequestSchema._type,
-        options?: {
-            onSuccess?: (ctx?: any) => void;
-            onError?: (error: any) => void;
-        },
-    ) => {
-        try {
-            return await authClient.signUp.email({
-                email: data.email,
-                password: data.password,
-                name: data.username,
-                fetchOptions: {
-                    onSuccess: options?.onSuccess,
-                    onError: options?.onError,
-                },
-            });
-        } catch (error) {
-            if (options?.onError) options.onError(error);
-            throw error;
-        }
+    signUp: async (data: SignUpRequest) => {
+        // @ts-ignore: Hono RPC 类型推断在结合复杂的 zValidator 时可能会丢失路由类型
+        return fetchApi(authFetchClient, async (c: any) => c["sign-up"].$post({ json: data }));
     },
+
+    /**
+     * 重置密码
+     */
+    resetPassword: async (data: ResetPasswordRequest) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) => c['reset-password'].$post({ json: data })),
+
+    /**
+     * 发送邮箱验证码
+     */
+    sendEmailVerificationOTP: async (email: string) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) =>
+            c.otp['email-verification'].$post({ json: { email } }),
+        ),
+
+    /**
+     * 发送忘记密码邮箱验证码
+     */
+    sendForgetPasswordOTP: async (credential: string) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) =>
+            c.otp['forget-password'].$post({ json: { credential } }),
+        ),
+
+    /**
+     * 通过用户名或邮箱检查用户是否存在
+     * @param credential
+     */
+    checkUserExists: async (credential: string) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) =>
+            c.check['user-exists'].$post({ json: { credential } }),
+        ),
+
+    /**
+     * 检测用户名唯一性
+     * @param username
+     */
+    checkUsernameUnique: async (username: string) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) =>
+            c.check['username-unique'].$post({ json: { username } }),
+        ),
+
+    /**
+     * 检测邮箱唯一性
+     * @param email
+     */
+    checkEmailUnique: async (email: string) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) => c.check['email-unique'].$post({ json: { email } })),
+
+    /**
+     * 获取发送频率状态
+     */
+    getOTPStatus: async (data: OTPRateLimitRequest) =>
+        // @ts-ignore
+        fetchApi(authFetchClient, async (c: any) => c['email-otp'].status.$post({ json: data })),
 
     /**
      * 用户登出
