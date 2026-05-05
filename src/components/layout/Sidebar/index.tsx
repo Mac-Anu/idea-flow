@@ -38,8 +38,18 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
         if (isCreating) return;
         setIsCreating(true);
 
-        // 1. 客户端生成 UUID，立即导航（不等后台）
-        const newId = crypto.randomUUID();
+        // 在非 HTTPS 环境下（如直接用 IP 访问），crypto.randomUUID() 不可用，需要自己写一个降级方案
+        const generateUUID = () => {
+            if (typeof crypto !== "undefined" && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        const newId = generateUUID();
         router.push(`/articles/${newId}`);
 
         // 2. 后台静默创建，完成后刷新侧边栏文章列表
