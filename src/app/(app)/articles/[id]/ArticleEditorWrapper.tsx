@@ -21,35 +21,43 @@ export function ArticleEditorWrapper({ id }: { id: string }) {
         let pollCount = 0;
         const MAX_POLLS = 25; // 最多轮询 5 秒
 
+        let isMounted = true;
+        
         const tryFetch = async () => {
+            if (!isMounted) return;
             try {
                 const res = await client.api.articles[":item"].$get({
                     param: { item: id },
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setArticle(data.article as Article);
-                    if (intervalRef.current) clearInterval(intervalRef.current);
-                    return;
+                    if (isMounted) setArticle(data.article as Article);
+                    return; // 成功，结束轮询
                 }
                 if (res.status === 404 && pollCount < MAX_POLLS) {
-                    // 乐观导航场景：文章还在创建中，继续轮询
                     pollCount++;
+                    // 等待 500ms 后再次轮询（避免并发耗尽连接池）
+                    if (isMounted) {
+                        intervalRef.current = setTimeout(tryFetch, 500);
+                    }
                 } else {
-                    setNotFound(true);
-                    if (intervalRef.current) clearInterval(intervalRef.current);
+                    if (isMounted) setNotFound(true);
                 }
             } catch {
-                // 网络错误忽略，继续轮询
+                if (isMounted && pollCount < MAX_POLLS) {
+                    pollCount++;
+                    intervalRef.current = setTimeout(tryFetch, 500);
+                } else {
+                    if (isMounted) setNotFound(true);
+                }
             }
         };
 
-        // 立即执行一次，再按 200ms 间隔轮询
         tryFetch();
-        intervalRef.current = setInterval(tryFetch, 200);
 
         return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
+            isMounted = false;
+            if (intervalRef.current) clearTimeout(intervalRef.current);
         };
     }, [id]);
 
