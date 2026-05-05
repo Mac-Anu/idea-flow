@@ -76,7 +76,7 @@ export const AllArticlesModal = ({ articles, onClose }: AllArticlesModalProps) =
                                                 />
                                             </div>
                                             <span className="text-sm font-medium text-[#5c544c] truncate group-hover:text-[#2d261f]">
-                                                {article.title || "无标题文章"}
+                                                {article.title || "新页面"}
                                             </span>
                                         </div>
 

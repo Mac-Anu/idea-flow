@@ -26,6 +26,7 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
     const router = useRouter();
     const [isAllModalOpen, setIsAllModalOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const activeArticleId = useArticleStore((state) => state.activeArticleId);
     const activeArticleTitle = useArticleStore((state) => state.activeArticleTitle);
 
@@ -34,20 +35,23 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
     const hasMore = articles.length > DISPLAY_LIMIT;
 
     const handleNewArticle = async () => {
+        if (isCreating) return;
+        setIsCreating(true);
+
+        // 1. 客户端生成 UUID，立即导航（不等后台）
+        const newId = crypto.randomUUID();
+        router.push(`/articles/${newId}`);
+
+        // 2. 后台静默创建，完成后刷新侧边栏文章列表
         try {
-            const res = await client.api.articles.$post({
-                json: {
-                    title: "",
-                    content: "",
-                },
+            await client.api.articles.$post({
+                json: { id: newId, title: "", content: "" },
             });
-            if (res.ok) {
-                const data = await res.json();
-                router.push(`/articles/${data.newArticle.id}`);
-                router.refresh();
-            }
+            router.refresh();
         } catch (error) {
             console.log("新建文章失败", error);
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -102,10 +106,15 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                     variant="ghost"
                     size="icon"
                     onClick={handleNewArticle}
-                    className="h-9 w-9 rounded-xl border border-black/5 bg-white/80 text-[#7b6d5b] shadow-sm hover:bg-[#f3ead8] hover:text-[#8a6a2f]"
-                    title="新建文章"
+                    disabled={isCreating}
+                    className="h-9 w-9 rounded-xl border border-black/5 bg-white/80 text-[#7b6d5b] shadow-sm hover:bg-[#f3ead8] hover:text-[#8a6a2f] disabled:opacity-50"
+                    title="新建页面"
                 >
-                    <Plus size={15} />
+                    {isCreating ? (
+                        <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                        <Plus size={15} />
+                    )}
                 </Button>
             </div>
 
@@ -120,8 +129,8 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                             const isActive = pathname === `/articles/${article.id}`;
                             const displayTitle =
                                 article.id === activeArticleId
-                                    ? activeArticleTitle || "无标题文章"
-                                    : article.title || "无标题文章";
+                                    ? activeArticleTitle || "新页面"
+                                    : article.title || "新页面";
                             return (
                                 <Link key={article.id} href={`/articles/${article.id}`}>
                                     <div

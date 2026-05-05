@@ -22,11 +22,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. 认证专用的路由 (访问这些页面必须未登录)
-    // 并且根据我们的项目，这里是 signin 而不是 login
     if (
-        pathname.startsWith("/auth/signin") ||
-        pathname.startsWith("/auth/signup") ||
-        pathname.startsWith("/auth/forget-password")
+        pathname.startsWith("/sign-in") ||
+        pathname.startsWith("/sign-up") ||
+        pathname.startsWith("/forget-password")
     ) {
         return authSignInHandler(request);
     }
@@ -35,21 +34,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
 }
 
-// 认证路由处理函数：处理必须要登录才能访问的页面
-const authPageProtectedHandler = async (request: NextRequest) => {
-    try {
-        const sessionResponse = await fetch(new URL("/api/auth/get-session", request.url), {
-            headers: {
-                cookie: request.headers.get("cookie") || "",
-            },
-        });
-        const session = sessionResponse.ok ? await sessionResponse.json() : null;
+// 同步提取 cookie 验证，避免每次路由跳转都去 fetch 后端 API，极大提升流畅度
+const checkIsAuthenticated = (request: NextRequest) => {
+    const sessionCookie = 
+        request.cookies.get("better-auth.session_token")?.value || 
+        request.cookies.get("__Secure-better-auth.session_token")?.value;
+    return !!sessionCookie;
+};
 
-        const isAuthenticated = !isNil(session?.user);
+// 认证路由处理函数：处理必须要登录才能访问的页面
+const authPageProtectedHandler = (request: NextRequest) => {
+    try {
+        const isAuthenticated = checkIsAuthenticated(request);
 
         if (!isAuthenticated) {
-            // 未登录，创建跳转到 signin 的 URL 并添加回调参数
-            const loginUrl = new URL("/auth/signin", request.url);
+            // 未登录，创建跳转到 sign-in 的 URL 并添加回调参数
+            const loginUrl = new URL("/sign-in", request.url);
             loginUrl.searchParams.set(
                 "callbackUrl",
                 request.nextUrl.pathname + request.nextUrl.search,
@@ -62,23 +62,16 @@ const authPageProtectedHandler = async (request: NextRequest) => {
     } catch (error) {
         console.error("Auth middleware error:", error);
         // 发生错误时也重定向到登录页面，同样添加回调参数
-        const loginUrl = new URL("/auth/signin", request.url);
+        const loginUrl = new URL("/sign-in", request.url);
         loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
         return NextResponse.redirect(loginUrl);
     }
 };
 
 // 登录/注册页面处理函数：处理已经登录就不能再访问的页面
-const authSignInHandler = async (request: NextRequest) => {
+const authSignInHandler = (request: NextRequest) => {
     try {
-        const sessionResponse = await fetch(new URL("/api/auth/get-session", request.url), {
-            headers: {
-                cookie: request.headers.get("cookie") || "",
-            },
-        });
-        const session = sessionResponse.ok ? await sessionResponse.json() : null;
-
-        const isAuthenticated = !isNil(session?.user);
+        const isAuthenticated = checkIsAuthenticated(request);
 
         if (isAuthenticated) {
             // 获取回调地址，没有则跳首页

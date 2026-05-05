@@ -32,9 +32,12 @@ export const queryArticleSlug = async (slug: string) => {
 };
 
 export const createArticleItem = async (data: CreateArticleInput, userId: string) => {
+    const insertData = data.id
+        ? { ...data, userId }
+        : { title: data.title, content: data.content, slug: data.slug, userId };
     const [createArticle] = await db
         .insert(articles)
-        .values({ ...data, userId })
+        .values(insertData)
         .returning();
     return createArticle;
 };

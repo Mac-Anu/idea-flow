@@ -93,7 +93,7 @@ export async function checkOTPRateLimit(
     } catch (_error) {
         console.error(_error);
         // 如果 Redis 失败，允许发送（降级策略）
-        return { canSend: false, message: "无法检查发送状态" };
+        return { canSend: true, message: "可以发送" };
     }
 }
 

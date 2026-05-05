@@ -32,14 +32,11 @@ export const ArticleEditor = ({ article }: { article: Article }) => {
             <div className="mb-8 flex flex-col gap-5 border-b border-black/6 pb-8 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9b8f80]">
-                        Portfolio Article
+                        Writing Desk
                     </p>
                     <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#1f1d1a] lg:text-3xl">
-                        让文章像作品，而不只是笔记
+                        {title || "无标题"}
                     </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6f655a]">
-                        用项目背景、技术选择、实现难点和最终结果来组织内容，让面试官快速看懂你的思路和表达能力。
-                    </p>
                 </div>
 
                 <div className="flex items-center gap-3 self-start lg:self-auto">
@@ -85,9 +82,9 @@ export const ArticleEditor = ({ article }: { article: Article }) => {
                         updateActiveArticleTitle(e.target.value);
                     }}
                     onKeyDown={handleTitleKeyDown}
-                    placeholder="给这篇文章起一个能代表你能力的标题"
+                    placeholder="无标题"
                     className={cn(
-                        "mb-8 w-full border-none bg-transparent text-[40px] font-semibold leading-[1.08] tracking-tight outline-none lg:text-[52px]",
+                        "mb-6 w-full border-none bg-transparent text-[36px] font-bold leading-[1.1] tracking-tight outline-none lg:text-[40px]",
                         "text-[#171411] placeholder:text-[#c7b9a5]",
                     )}
                 />

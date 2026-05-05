@@ -76,7 +76,7 @@ export const useSignUpForm = () => {
         return { ...values, validateType: 'email' } as SignUpFormType;
     }, []);
     return useForm<SignUpFormType>({
-        mode: 'all',
+        mode: 'onBlur',
         resolver: zodResolver(signUpFormSchema),
         defaultValues,
     });
@@ -97,7 +97,7 @@ export const useSignUpSubmit = () => {
                     return;
                 }
 
-                let signinPath = '/auth/signin';
+                let signinPath = '/sign-in';
 
                 const urlParams = new URLSearchParams();
                 searchParams.forEach((value, key) => {

@@ -8,7 +8,7 @@ import { Article } from "@/server/articles/type";
 
 export const useArticleEditor = (article: Article) => {
     const router = useRouter();
-    const [title, setTitle] = useState(article.title === "无标题文章" ? "" : article.title);
+    const [title, setTitle] = useState(article.title === "新页面" ? "" : article.title);
     const [content, setContent] = useState(article.content);
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -20,14 +20,14 @@ export const useArticleEditor = (article: Article) => {
 
     // 新文章自动聚焦标题
     useEffect(() => {
-        if (!article.title || article.title === "无标题文章") {
+        if (!article.title || article.title === "新页面") {
             titleRef.current?.focus();
         }
     }, [article.title]);
 
     // 同步到全局状态
     useEffect(() => {
-        setActiveArticle(article.id, article.title === "无标题文章" ? "" : article.title);
+        setActiveArticle(article.id, article.title === "新页面" ? "" : article.title);
     }, [article.id, article.title, setActiveArticle]);
 
     // 标题按 Enter → 跳到正文
@@ -73,7 +73,7 @@ export const useArticleEditor = (article: Article) => {
     useEffect(() => {
         // 只有内容真的变了，才触发防抖计时
         if (
-            title === (article.title === "无标题文章" ? "" : article.title) &&
+            title === (article.title === "新页面" ? "" : article.title) &&
             content === article.content
         ) {
             return;

@@ -247,12 +247,17 @@ export const authRoutes = app
                 // 使用我们在 service 里写的带 Drizzle 翻译的认证
                 const result = await signIn(username, password);
 
-                if (isNil(result) || isNil(result.token)) {
-                    return c.json(createErrorResult("认证失败", "用户名或密码错误", 401), 401);
+                if (result.error === 'USER_NOT_FOUND') {
+                    return c.json(createErrorResult("登录失败", "账号不存在，请先注册", 404), 404);
                 }
-                return c.json(result, 200);
+                if (result.error === 'INVALID_PASSWORD' || isNil(result.data?.token)) {
+                    return c.json(createErrorResult("认证失败", "账号或密码错误", 401), 401);
+                }
+
+                return c.json(result.data, 200);
             } catch (error: any) {
-                return c.json(createErrorResult("登录失败", error), 500);
+                console.error("底层登录报错：", error);
+                return c.json(createErrorResult("登录失败", "服务器内部错误，请稍后重试"), 500);
             }
         },
     )

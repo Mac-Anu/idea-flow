@@ -33,19 +33,22 @@ export const signIn = async (credential: string, password: string) => {
         .where(or(eq(user.username, credential), eq(user.email, credential)));
 
     if (isNil(existingUser)) {
-        return null;
+        return { error: 'USER_NOT_FOUND' };
     }
 
-    // 使用Better Auth的内部验证方法
-    const result = await auth.api.signInEmail({
-        body: {
-            // BetterAuth 底层必须用 email 登录，但我们通过上面的查找把 credential 翻译成了 email
-            email: existingUser.email,
-            password,
-        },
-    });
-
-    return result;
+    try {
+        // 使用Better Auth的内部验证方法
+        const result = await auth.api.signInEmail({
+            body: {
+                // BetterAuth 底层必须用 email 登录，但我们通过上面的查找把 credential 翻译成了 email
+                email: existingUser.email,
+                password,
+            },
+        });
+        return { success: true, data: result };
+    } catch (e) {
+        return { error: 'INVALID_PASSWORD' };
+    }
 };
 
 /**
@@ -147,13 +150,6 @@ export const resetPasswordByEmail = async (data: ResetPasswordRequest) => {
     return { result: res.success, message: res.success ? "密码重置成功" : "密码重置失败" };
 };
 
-/**
- * 验证码发送桥梁函数 (目前还是占位符，稍后我们会实现真正的邮件发送逻辑)
- */
-export const sendOTPHandler = async (data: { email: string; code: string }, type: string) => {
-    console.log(`[发送邮件模拟] 即将发送 ${type} 类型的验证码 ${data.code} 给邮箱 ${data.email}`);
-    // 稍后我们会在这里调用 sendSmtpMail
-};
 /**
  * 根据 用户名 或 邮箱 查询用户
  */

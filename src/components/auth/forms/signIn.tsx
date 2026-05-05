@@ -19,7 +19,7 @@ function FormComponent() {
     const searchParams = useSearchParams();
 
     const signupUrl = useMemo(() => {
-        let url = '/auth/signup';
+        let url = '/sign-up';
         const params = new URLSearchParams();
         searchParams.forEach((value, key) => {
             params.set(key, value);
@@ -78,7 +78,7 @@ function FormComponent() {
 
                 <div className="flex justify-end">
                     <Link
-                        href="/auth/forget-password"
+                        href="/forget-password"
                         className="text-sm text-[#c8a96e] hover:text-[#b0925c] transition-colors"
                     >
                         忘记密码？

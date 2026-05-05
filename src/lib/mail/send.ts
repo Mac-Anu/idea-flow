@@ -6,7 +6,7 @@ import { deepMerge } from "../utils";
  * email-templates 实例
  */
 const emailTemplates = new Email({
-    send: false,
+    send: true,
     views: {
         root: path.join(process.cwd(), "files/email-templates"),
         options: {

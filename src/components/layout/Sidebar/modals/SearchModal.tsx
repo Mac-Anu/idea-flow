@@ -133,7 +133,7 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="text-[15px] font-semibold text-[#2d261f] truncate group-hover:text-[#1f1d1a]">
-                                            {article.title || "无标题灵感碎片"}
+                                            {article.title || "新页面"}
                                         </p>
                                         {snippet && (
                                             <p className="text-[13px] leading-relaxed text-[#6b6258] mt-1.5 line-clamp-2"

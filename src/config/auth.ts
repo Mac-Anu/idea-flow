@@ -3,7 +3,7 @@ import { EmailOTPType } from "@/server/user/constants";
 import z from "zod";
 
 export const authConfig: AuthConfig = {
-    protectedPages: ["/blog/create", "/blog/edit"],
+    protectedPages: ["/articles", "/dashboard"],
     validates: {
         username: z
             .string()

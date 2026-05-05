@@ -61,7 +61,7 @@ export const useForgetPasswordForm = () => {
         [],
     );
     return useForm<ForgetPasswordFormType>({
-        mode: 'all',
+        mode: 'onBlur',
         resolver: zodResolver(forgetPasswordFormSchema),
         defaultValues,
     });
@@ -86,7 +86,7 @@ export const useForgetPasswordSubmit = () => {
                     return;
                 }
 
-                let signinPath = '/auth/signin';
+                let signinPath = '/sign-in';
 
                 const urlParams = new URLSearchParams();
                 searchParams.forEach((value, key) => {

@@ -35,7 +35,7 @@ function FormComponent() {
 
     const searchParams = useSearchParams();
     const signinUrl = useMemo(() => {
-        let url = '/auth/signin';
+        let url = '/sign-in';
         const params = new URLSearchParams();
         searchParams.forEach((value, key) => {
             params.set(key, value);

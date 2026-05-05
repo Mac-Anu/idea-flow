@@ -14,6 +14,7 @@ export const ArticleSchema = z.object({
 
 export const createArticleSchema = z
     .object({
+        id: z.string().uuid().optional().meta({ description: "客户端预生成的 UUID（可选，用于乐观导航）" }),
         title: z.string().meta({ description: "文章标题" }),
         content: z.string().meta({ description: "文章正文内容" }),
         slug: z.string().optional().meta({ description: "短链接别名(slug)" }),
