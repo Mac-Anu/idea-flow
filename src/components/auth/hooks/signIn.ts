@@ -45,7 +45,9 @@ export const useSignInSubmit = () => {
                         toast.success('登录成功，欢迎掌控空间！');
                         const urlParams = new URLSearchParams(window.location.search);
                         const callbackUrl = urlParams.get('callbackUrl');
-                        isNil(callbackUrl) ? router.replace('/') : router.replace(callbackUrl);
+                        // 移动端弱网环境下，router.replace 没有明显加载提示会让用户以为卡死了。
+                        // 这里改用原生跳转，并且默认跳去工作台 (/articles)
+                        window.location.href = isNil(callbackUrl) ? '/articles' : callbackUrl;
                     },
                     onError: (error: any) => {
                         toast.error('登录被驳回', {

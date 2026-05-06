@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { articlesApi } from "@/api/articles";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -17,8 +18,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     return (
         <div className="min-h-screen bg-[#f5f1ea] text-[#1f1d1a] selection:bg-amber-100 selection:text-[#1f1d1a]">
-            <div className="mx-auto flex min-h-screen w-full max-w-[1440px] gap-6 px-4 py-4 lg:px-6 lg:py-6">
-                <Sidebar articles={articles} />
+            <div className="mx-auto flex flex-col lg:flex-row min-h-screen w-full max-w-[1440px] gap-4 lg:gap-6 px-4 py-4 lg:px-6 lg:py-6">
+                <div className="hidden lg:block shrink-0">
+                    <Sidebar articles={articles} />
+                </div>
+                
+                <MobileNav articles={articles} />
 
                 <main className="relative flex-1 overflow-y-auto rounded-[32px] border border-black/5 bg-[#fffdf8] shadow-[0_20px_60px_rgba(33,24,14,0.06)]">
                     <div className="mx-auto h-full max-w-5xl px-6 py-8 lg:px-12 lg:py-10">{children}</div>

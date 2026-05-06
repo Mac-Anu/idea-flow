@@ -18,6 +18,7 @@ export const createArticleSchema = z
         title: z.string().meta({ description: "文章标题" }),
         content: z.string().meta({ description: "文章正文内容" }),
         slug: z.string().optional().meta({ description: "短链接别名(slug)" }),
+        tags: z.array(z.string()).optional().meta({ description: "文章标签" }),
     })
     .meta({ description: "新建文章的请求参数格式" });
 
@@ -27,5 +28,6 @@ export const updateArticleSchema = z
         title: z.string().meta({ description: "修改后的新标题" }),
         content: z.string().meta({ description: "修改后的新内容" }),
         slug: z.string().optional().meta({ description: "修改后的短链接别名(slug)" }),
+        tags: z.array(z.string()).optional().meta({ description: "修改后的标签" }),
     })
     .meta({ description: "修改文章的请求参数格式" });

@@ -34,7 +34,7 @@ export const queryArticleSlug = async (slug: string) => {
 export const createArticleItem = async (data: CreateArticleInput, userId: string) => {
     const insertData = data.id
         ? { ...data, userId }
-        : { title: data.title, content: data.content, slug: data.slug, userId };
+        : { title: data.title, content: data.content, slug: data.slug, tags: data.tags, userId };
     const [createArticle] = await db
         .insert(articles)
         .values(insertData)
@@ -102,4 +102,21 @@ export const searchArticles = async (query: string, titleOnly: boolean = false, 
             ),
         );
     return searchResults;
+};
+
+export const queryAllTags = async (userId: string) => {
+    // 查询该用户所有未删除文章的 tags 字段
+    const rows = await db
+        .select({ tags: articles.tags })
+        .from(articles)
+        .where(and(isNull(articles.deleteAt), eq(articles.userId, userId), isNotNull(articles.tags)));
+    
+    // 把所有的数组展平并去重
+    const tagSet = new Set<string>();
+    rows.forEach(row => {
+        if (row.tags) {
+            row.tags.forEach(tag => tagSet.add(tag));
+        }
+    });
+    return Array.from(tagSet);
 };

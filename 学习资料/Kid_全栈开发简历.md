@@ -17,11 +17,11 @@
 
 | 方向       | 技术                                                                                                  |
 | :--------- | :---------------------------------------------------------------------------------------------------- |
-| **前端**   | React 18、Next.js 14（App Router）、TypeScript、Tailwind CSS、Shadcn UI、Zustand、Tiptap 富文本编辑器 |
-| **后端**   | Hono（RESTful API + RPC 类型安全调用）、Zod 数据校验、OpenAPI / Swagger 接口文档                      |
-| **数据库** | PostgreSQL（Neon Serverless）、Drizzle ORM                                                            |
-| **工程化** | pnpm、ESLint、Git 版本控制                                                                            |
-| **了解**   | MySQL、MongoDB（概念与适用场景）、Prisma ORM、Vercel 部署                                             |
+| **前端**   | React、Next.js（App Router）、TypeScript、Tailwind CSS、Shadcn UI、Zustand、Framer Motion、Tiptap     |
+| **后端**   | Node.js、Hono（RESTful + RPC）、Better Auth（全栈身份验证）、Zod 数据校验、SMTP 邮件服务对接        |
+| **数据库** | PostgreSQL、Redis（缓存与会话存储）、Drizzle ORM                                                      |
+| **工程化** | Linux 云服务器运维、PM2 进程守护、Docker 容器化、环境配置与部署发布、pnpm、Git 版本控制               |
+| **了解**   | n8n 自动化工作流、AI Agent 接入、Prisma ORM、Vercel 部署                                             |
 
 ---
 
@@ -36,14 +36,13 @@
 **核心功能与技术亮点：**
 
 - **全栈 CRUD 闭环**：使用 Hono 框架搭建 RESTful API，通过 RPC 客户端实现前后端全链路 TypeScript 类型安全，拼错字段名编译时即报错，杜绝运行时类型错误
+- **全栈身份验证**：集成 Better Auth，实现含邮箱验证码发送、密码哈希比对、Session 会话管理的完整 Auth 流程，对接 SMTP 邮件服务
 - **富文本编辑器**：集成 Tiptap 编辑器，支持 Markdown 语法、代码高亮、标题大纲（TOC）实时提取与定位
-- **自动保存 & 快捷键**：实现防抖（Debounce）自动保存机制，支持 `⌘S` 快捷保存，编辑体验对标 Notion
-- **软删除回收站**：采用企业级"软删除"数据安全策略，通过 `deletedAt` 时间戳标记实现回收站功能，支持文章恢复与彻底删除
+- **移动端响应式与交互**：复刻 Notion 侧边栏交互逻辑，使用 Framer Motion 实现平滑抽屉动画，基于 Tailwind CSS 完美适配移动/桌面多端布局
+- **自动保存 & 软删除**：实现防抖（Debounce）自动保存与 `⌘S` 快捷键机制；采用企业级"软删除"策略实现回收站功能
 - **跨组件实时同步**：使用 Zustand 状态管理库，实现编辑器标题修改与侧边栏列表名称的毫秒级实时联动，精准订阅避免无效渲染
-- **三层架构设计**：遵循 Controller → Service → Data Access 分层架构，将数据库操作封装为独立 Service 层，路由与业务逻辑解耦，代码可维护性高
-- **自定义 Hook 抽象**：将编辑器的复杂状态逻辑（12+ 个 useState/useRef/useEffect）提取为独立的 `useArticleEditor` Hook，组件代码从 172 行精简至 80 行
-- **接口文档自动化**：集成 OpenAPI 规范，通过 Swagger UI / Scalar 自动生成可交互的 API 文档，所有接口包含完整的成功/错误响应定义
-- **数据校验防线**：使用 Zod Schema 严格校验前端请求数据，在 Hono 路由层拦截非法请求，确保数据库安全
+- **三层架构设计**：遵循 Controller → Service → Data Access 分层架构，将数据库操作与核心逻辑解耦，代码可维护性高
+- **独立部署与运维**：在 Linux 云服务器环境从零完成项目上线，配置 PostgreSQL 远程访问与 Redis 缓存，使用 PM2 实现服务后台无缝重启与守护
 
 ---
 

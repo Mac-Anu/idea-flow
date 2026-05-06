@@ -4,6 +4,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { Scalar } from "@scalar/hono-api-reference";
 import { openAPIRouteHandler } from "hono-openapi";
 import { authRoutes } from "./user/routes/auth";
+import { tagRoutes } from "./tag/route";
 import { createErrorResult } from "./common/error";
 
 const app = createHonoApp().basePath("/api");
@@ -13,7 +14,10 @@ app.onError((err, c) => {
     console.error(`[全局异常] ${err.message}`);
     return c.json(createErrorResult("服务器内部错误", err, 500), 500);
 });
-const routes = app.route("/articles", articleApi).route("/auth", authRoutes);
+const routes = app
+    .route("/articles", articleApi)
+    .route("/tags", tagRoutes)
+    .route("/auth", authRoutes);
 
 // Swagger 接口文档
 app.get("/swagger", swaggerUI({ url: "/api/openapi" }));

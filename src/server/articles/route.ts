@@ -24,6 +24,7 @@ import {
     queryArticleTrashList,
     restoreArticleItem,
     searchArticles,
+    queryAllTags,
 } from "./service";
 import { createHonoApp } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
@@ -76,29 +77,7 @@ export const articleApi = createHonoApp()
             }
         },
     )
-    .get(
-        "/:item",
-        describeRoute({
-            tags: articleTags,
-            summary: "文章详情查询",
-            description: "可以传入文章id或者slug查询文章详情",
-            responses: {
-                ...createSuccessResponse(createArticleSchema),
-                ...createNotFoundErrorResponse("文章不存在"),
-                ...createServerErrorResponse("查询文章详情失败"),
-            },
-        }),
-        async (c) => {
-            try {
-                const item = c.req.param("item");
-                const article = await queryArticleItem(item);
-                if (isNil(article)) return c.json({ message: "文章不存在" }, 404);
-                return c.json({ article });
-            } catch (error) {
-                return c.json({ message: "查询文章详情失败" }, 500);
-            }
-        },
-    )
+
 
     .post(
         "/",
@@ -180,6 +159,50 @@ export const articleApi = createHonoApp()
             const userId = c.get("user")!.id;
             const data = await queryArticleTrashList(userId);
             return c.json({ data });
+        },
+    )
+    .get(
+        "/tags/list",
+        describeRoute({
+            tags: articleTags,
+            summary: "文章标签列表查询",
+            description: "获取用户所有使用过的文章标签去重列表",
+            responses: {
+                ...createServerErrorResponse("查询标签失败"),
+            },
+        }),
+        AuthProtectedMiddleware,
+        async (c) => {
+            try {
+                const userId = c.get("user")!.id;
+                const tags = await queryAllTags(userId);
+                return c.json({ tags });
+            } catch (error) {
+                return c.json({ message: "查询标签失败" }, 500);
+            }
+        },
+    )
+    .get(
+        "/:item",
+        describeRoute({
+            tags: articleTags,
+            summary: "文章详情查询",
+            description: "可以传入文章id或者slug查询文章详情",
+            responses: {
+                ...createSuccessResponse(createArticleSchema),
+                ...createNotFoundErrorResponse("文章不存在"),
+                ...createServerErrorResponse("查询文章详情失败"),
+            },
+        }),
+        async (c) => {
+            try {
+                const item = c.req.param("item");
+                const article = await queryArticleItem(item);
+                if (isNil(article)) return c.json({ message: "文章不存在" }, 404);
+                return c.json({ article });
+            } catch (error) {
+                return c.json({ message: "查询文章详情失败" }, 500);
+            }
         },
     )
     .patch(
