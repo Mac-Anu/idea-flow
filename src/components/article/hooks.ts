@@ -10,6 +10,7 @@ export const useArticleEditor = (article: Article) => {
     const router = useRouter();
     const [title, setTitle] = useState(article.title === "新页面" ? "" : article.title);
     const [content, setContent] = useState(article.content);
+    const [tags, setTags] = useState<string[]>(article.tags || []);
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [headings, setHeadings] = useState<{ level: number; text: string; pos: number }[]>([]);
@@ -50,6 +51,7 @@ export const useArticleEditor = (article: Article) => {
                     id: article.id,
                     title: title.trim(),
                     content: content,
+                    tags: tags,
                 },
             });
 
@@ -63,7 +65,7 @@ export const useArticleEditor = (article: Article) => {
         } finally {
             setIsSaving(false);
         }
-    }, [article.id, article.title, article.content, title, content, router]);
+    }, [article.id, article.title, article.content, article.tags, title, content, tags, router]);
 
     // 防抖自动更新
     const debouncedAutoSave = useDebouncedCallback(() => {
@@ -74,12 +76,13 @@ export const useArticleEditor = (article: Article) => {
         // 只有内容真的变了，才触发防抖计时
         if (
             title === (article.title === "新页面" ? "" : article.title) &&
-            content === article.content
+            content === article.content &&
+            JSON.stringify(tags) === JSON.stringify(article.tags || [])
         ) {
             return;
         }
         debouncedAutoSave();
-    }, [title, content, article, debouncedAutoSave]);
+    }, [title, content, tags, article, debouncedAutoSave]);
 
     // Ctrl+S / Cmd+S 保存快捷键
     useEffect(() => {
@@ -92,7 +95,7 @@ export const useArticleEditor = (article: Article) => {
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [title, content]);
+    }, [title, content, tags]);
 
     // 删除
     const handleDelete = async () => {
@@ -115,6 +118,7 @@ export const useArticleEditor = (article: Article) => {
     return {
         title,
         content,
+        tags,
         isSaving,
         saved,
         headings,
@@ -123,6 +127,7 @@ export const useArticleEditor = (article: Article) => {
         contentRef,
         setTitle,
         setContent,
+        setTags,
         setHeadings,
         setEditor,
         updateActiveArticleTitle,

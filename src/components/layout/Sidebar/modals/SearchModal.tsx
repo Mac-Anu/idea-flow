@@ -53,24 +53,24 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
             {/* 弹窗本体 */}
             <div
                 className="fixed top-[15%] left-1/2 -translate-x-1/2 z-[9999] 
-                w-[90vw] max-w-[580px] bg-[rgba(255,251,245,0.95)] rounded-[24px] shadow-[0_30px_60px_rgba(33,24,14,0.08)] 
-                border border-black/5 overflow-hidden backdrop-blur-xl"
+                w-[90vw] max-w-[580px] bg-popover rounded-[24px] shadow-[0_30px_60px_rgba(0,0,0,0.08)] 
+                border border-border overflow-hidden backdrop-blur-xl text-popover-foreground"
             >
                 {/* 搜索栏 */}
-                <div className="flex items-center gap-4 px-6 py-4 border-b border-black/5 bg-white/40">
-                    <Search size={18} className="text-[#a89d90] shrink-0" />
+                <div className="flex items-center gap-4 px-6 py-4 border-b border-border bg-transparent">
+                    <Search size={18} className="text-muted-foreground shrink-0" />
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="想寻找刚才那一闪而过的灵感？"
                         autoFocus
                         className="flex-1 text-[15px] font-medium outline-none bg-transparent 
-                            placeholder:text-[#a89d90] text-[#2d261f]"
+                            placeholder:text-muted-foreground/50 text-foreground"
                     />
                     {query && (
                         <button
                             onClick={() => setQuery("")}
-                            className="p-1.5 rounded-xl hover:bg-[#f3ead8] text-[#9b8f80] hover:text-[#8a6a2f] transition-colors"
+                            className="p-1.5 rounded-xl hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -78,13 +78,13 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                 </div>
 
                 {/* 仅搜标题开关 */}
-                <div className="px-6 py-2 border-b border-black/5 bg-white/40 flex items-center gap-2">
-                    <label className="flex items-center gap-2 text-[11px] font-medium text-[#9b8f80] cursor-pointer select-none">
+                <div className="px-6 py-2 border-b border-border bg-transparent flex items-center gap-2">
+                    <label className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground cursor-pointer select-none">
                         <input
                             type="checkbox"
                             checked={titleOnly}
                             onChange={() => setTitleOnly(!titleOnly)}
-                            className="rounded border-[#a89d90] text-[#8a6a2f] focus:ring-[#8a6a2f]"
+                            className="rounded border-input text-primary focus:ring-primary"
                         />
                         仅搜标题
                     </label>
@@ -94,14 +94,14 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                 <div className="max-h-[50vh] overflow-y-auto px-4 py-2">
                     {/* 没输入时的默认提示 */}
                     {!query.trim() && (
-                        <div className="px-4 py-12 text-center text-sm font-medium text-[#9b8f80]">
+                        <div className="px-4 py-12 text-center text-sm font-medium text-muted-foreground">
                             你可以通过关键词、标签甚至是一整句话来唤醒沉睡的思维。
                         </div>
                     )}
 
                     {/* 有输入但没结果 */}
                     {query.trim() && results.length === 0 && (
-                        <div className="px-4 py-12 text-center text-sm font-medium text-[#9b8f80]">
+                        <div className="px-4 py-12 text-center text-sm font-medium text-muted-foreground">
                             似乎这里什么也没有，去别处看看吧！
                         </div>
                     )}
@@ -125,27 +125,27 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                                     href={`/articles/${article.id}`}
                                     onClick={onClose}
                                     className="group flex items-start gap-4 px-4 py-4 
-                                        rounded-2xl hover:bg-white/80 transition-all border border-transparent 
-                                        hover:border-black/5 hover:shadow-sm"
+                                        rounded-2xl hover:bg-accent/50 transition-all border border-transparent 
+                                        hover:border-border hover:shadow-sm"
                                 >
-                                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white border border-black/5 group-hover:bg-[#f3ead8] group-hover:border-[#ead7b2] transition-colors">
-                                        <FileText size={16} className="text-[#a89d90] group-hover:text-[#8a6a2f]" />
+                                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-card border border-border group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
+                                        <FileText size={16} className="text-muted-foreground group-hover:text-primary" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[15px] font-semibold text-[#2d261f] truncate group-hover:text-[#1f1d1a]">
+                                        <p className="text-[15px] font-semibold text-foreground truncate">
                                             {article.title || "新页面"}
                                         </p>
                                         {snippet && (
-                                            <p className="text-[13px] leading-relaxed text-[#6b6258] mt-1.5 line-clamp-2"
+                                            <p className="text-[13px] leading-relaxed text-muted-foreground mt-1.5 line-clamp-2"
                                                 dangerouslySetInnerHTML={{
                                                     __html: snippet.replace(
                                                         new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi"),
-                                                        '<mark class="bg-[#f3ead8] text-[#8a6a2f] px-1 py-0.5 rounded-md font-medium">$1</mark>'
+                                                        '<mark class="bg-primary/20 text-primary px-1 py-0.5 rounded-md font-medium">$1</mark>'
                                                     ),
                                                 }}
                                             />
                                         )}
-                                        <p className="text-[11px] font-medium text-[#9b8f80] mt-2 flex items-center gap-2">
+                                        <p className="text-[11px] font-medium text-muted-foreground/70 mt-2 flex items-center gap-2">
                                             {new Date(article.updatedAt).toLocaleDateString("zh-CN")}
                                         </p>
                                     </div>
@@ -156,12 +156,12 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                 </div>
 
                 {/* 底部快捷键提示 */}
-                <div className="px-6 py-3 border-t border-black/5 bg-white/40 flex justify-end gap-3">
+                <div className="px-6 py-3 border-t border-border bg-transparent flex justify-end gap-3">
                     <button 
                         onClick={onClose}
-                        className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-[#9b8f80] hover:text-[#8a6a2f] transition-colors cursor-pointer"
+                        className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
-                        <kbd className="px-2 py-1 bg-[#f3ead8] text-[#8a6a2f] rounded-md text-[10px] uppercase font-bold shadow-sm">
+                        <kbd className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-[10px] uppercase font-bold shadow-sm border border-border">
                             ESC
                         </kbd>
                         <span>关闭</span>

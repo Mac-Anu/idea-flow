@@ -4,7 +4,7 @@
     min-height: 60vh;
     font-size: 1.125rem;
     line-height: 1.75;
-    color: #3f3f46;
+    color: var(--foreground);
 }
 .tiptap h1 {
     font-size: 2rem;
@@ -30,17 +30,17 @@
     margin: 0.5rem 0;
 }
 .tiptap code {
-    background: #f4f4f5;
+    background: var(--muted);
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
 }
 .tiptap pre {
-    background: #f7f6f3;
-    color: #37352f;
+    background: var(--muted);
+    color: var(--foreground);
     padding: 2rem 1rem 1rem 1rem;
-    border-radius: 4px;
-    border: 1px solid #e3e2de;
+    border-radius: 6px;
+    border: 1px solid var(--border);
     margin: 0.75rem 0;
     position: relative;
     font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
@@ -123,9 +123,9 @@
     top: 0.5rem;
     right: 0.75rem;
     background: transparent;
-    border: 1px solid #e3e2de;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    color: #9b9a97;
+    color: var(--muted-foreground);
     font-size: 0.75rem;
     padding: 0.15rem 0.25rem;
     cursor: pointer;
@@ -133,36 +133,36 @@
     font-family: -apple-system, sans-serif;
 }
 .code-block-language-select:hover {
-    color: #37352f;
-    border-color: #c0bfbc;
+    color: var(--foreground);
+    border-color: var(--primary);
 }
 .code-block-language-select:focus {
     outline: none;
-    border-color: #2eaadc;
-    color: #37352f;
+    border-color: var(--primary);
+    color: var(--foreground);
 }
 .code-block-language-select option {
-    background: #ffffff;
-    color: #37352f;
+    background: var(--background);
+    color: var(--foreground);
 }
 
 /* ===== 引用块 ===== */
 .tiptap blockquote {
-    border-left: 3px solid #a1a1aa;
+    border-left: 3px solid var(--border);
     padding-left: 1rem;
-    color: #71717a;
+    color: var(--muted-foreground);
 }
 
 /* ===== 链接样式 ===== */
 .tiptap a {
-    color: #2563eb;
+    color: var(--primary);
     text-decoration: underline;
     text-underline-offset: 2px;
     cursor: pointer;
     transition: color 0.15s;
 }
 .tiptap a:hover {
-    color: #1d4ed8;
+    color: var(--foreground);
 }
 .bubble-menu {
     display: flex;

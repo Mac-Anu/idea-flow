@@ -187,45 +187,45 @@ export const TiptapEditor = ({
                     {isLinkPanelOpen ? (
                         <div
                             ref={panelRef}
-                            className="bg-white rounded-xl shadow-[0_12px_40px_rgba(33,24,14,0.12)] border border-black/5 p-4 w-[320px] flex flex-col gap-4"
-                            onClick={(e) => e.stopPropagation()} // 阻止冒泡防止点击由于其它机制导致面板关闭
+                            className="bg-popover text-popover-foreground rounded-xl shadow-lg border border-border p-4 w-[320px] flex flex-col gap-4"
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-[#9b8f80] px-1">
+                                <label className="text-[11px] font-medium text-muted-foreground px-1">
                                     页面或 URL
                                 </label>
-                                <div className="flex items-center bg-[#fdfaf5] border border-black/5 rounded-lg px-3 py-2 focus-within:border-[#dec9a0] focus-within:bg-white transition-colors">
-                                    <LinkIcon size={14} className="text-[#a89d90] shrink-0 mr-2" />
+                                <div className="flex items-center bg-background border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                                    <LinkIcon size={14} className="text-muted-foreground shrink-0 mr-2" />
                                     <input
                                         type="text"
                                         value={linkHref}
                                         onChange={(e) => setLinkHref(e.target.value)}
                                         placeholder="https:// 或搜索内容..."
-                                        className="bg-transparent border-none outline-none text-sm text-[#2d261f] w-full placeholder:text-[#c7b9a5]"
+                                        className="bg-transparent border-none outline-none text-sm text-foreground w-full placeholder:text-muted-foreground/50"
                                         autoFocus
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-[#9b8f80] px-1">
+                                <label className="text-[11px] font-medium text-muted-foreground px-1">
                                     链接标题
                                 </label>
-                                <div className="flex items-center bg-[#fdfaf5] border border-black/5 rounded-lg px-3 py-2 focus-within:border-[#dec9a0] focus-within:bg-white transition-colors">
+                                <div className="flex items-center bg-background border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                                     <input
                                         type="text"
                                         value={linkText}
                                         onChange={(e) => setLinkText(e.target.value)}
                                         placeholder="输入的显示文字"
-                                        className="bg-transparent border-none outline-none text-sm text-[#2d261f] w-full placeholder:text-[#c7b9a5]"
+                                        className="bg-transparent border-none outline-none text-sm text-foreground w-full placeholder:text-muted-foreground/50"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-black/5 mt-1">
+                            <div className="flex items-center justify-between pt-2 border-t border-border mt-1">
                                 <button
                                     onClick={removeLink}
-                                    className="flex items-center gap-1.5 text-[12px] font-medium text-red-500 hover:text-red-600 hover:bg-red-50 px-2 py-1.5 rounded-md transition-colors"
+                                    className="flex items-center gap-1.5 text-[12px] font-medium text-destructive hover:bg-destructive/10 px-2 py-1.5 rounded-md transition-colors"
                                 >
                                     <Trash2 size={13} />
                                     移除链接
@@ -234,13 +234,13 @@ export const TiptapEditor = ({
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setIsLinkPanelOpen(false)}
-                                        className="text-[12px] font-medium text-[#8a8074] hover:bg-black/5 px-3 py-1.5 rounded-md transition-colors"
+                                        className="text-[12px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground px-3 py-1.5 rounded-md transition-colors"
                                     >
                                         取消
                                     </button>
                                     <button
                                         onClick={saveLink}
-                                        className="text-[12px] font-bold text-white bg-[#1f1d1a] hover:bg-[#3a342e] px-3 py-1.5 rounded-md shadow-sm transition-colors"
+                                        className="text-[12px] font-bold text-primary-foreground bg-primary hover:opacity-90 px-3 py-1.5 rounded-md shadow-sm transition-colors"
                                     >
                                         应用
                                     </button>
@@ -248,30 +248,29 @@ export const TiptapEditor = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="bubble-menu flex items-center bg-white border border-black/5 rounded-lg shadow-md p-1 gap-1">
+                        <div className="bubble-menu flex items-center bg-popover text-popover-foreground border border-border rounded-lg shadow-md p-1 gap-1">
                             {/* 基础工具栏 */}
                             <button
                                 onClick={() => editor.chain().focus().toggleBold().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("bold") ? "bg-[#f3ead8] text-[#8a6a2f]" : "text-[#6b6258] hover:bg-[#fbf9f6]"}`}
+                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("bold") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
                             >
                                 <span className="font-bold text-[14px]">B</span>
                             </button>
                             <button
                                 onClick={() => editor.chain().focus().toggleItalic().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("italic") ? "bg-[#f3ead8] text-[#8a6a2f]" : "text-[#6b6258] hover:bg-[#fbf9f6]"}`}
+                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("italic") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
                             >
                                 <span className="italic text-[14px]">I</span>
                             </button>
                             <button
                                 onClick={() => editor.chain().focus().toggleStrike().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("strike") ? "bg-[#f3ead8] text-[#8a6a2f]" : "text-[#6b6258] hover:bg-[#fbf9f6]"}`}
+                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("strike") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
                             >
                                 <span className="line-through text-[14px]">S</span>
                             </button>
-                            <div className="w-px h-4 bg-black/10 mx-1" /> {/* 分隔线 */}
+                            <div className="w-px h-4 bg-border mx-1" /> {/* 分隔线 */}
                             <button
                                 onClick={() => {
-                                    // 开启链接编辑面板，并获取当前选中的文字作为预期标题
                                     const { from, to } = editor.state.selection;
                                     const text = editor.state.doc.textBetween(from, to, " ");
 
@@ -283,20 +282,20 @@ export const TiptapEditor = ({
                                     );
                                     setIsLinkPanelOpen(true);
                                 }}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("link") || isLinkPanelOpen ? "bg-[#f3ead8] text-[#8a6a2f]" : "text-[#6b6258] hover:bg-[#fbf9f6]"}`}
+                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("link") || isLinkPanelOpen ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
                             >
                                 <LinkIcon size={14} />
                             </button>
                             {editor.isActive("link") && (
                                 <>
-                                    <div className="w-px h-4 bg-black/10 mx-1" />
+                                    <div className="w-px h-4 bg-border mx-1" />
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(
                                                 editor.getAttributes("link").href,
                                             );
                                         }}
-                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-[#6b6258] hover:bg-[#fbf9f6] transition-colors"
+                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors"
                                         title="复制链接"
                                     >
                                         <Copy size={13} />
@@ -305,7 +304,7 @@ export const TiptapEditor = ({
                                         href={editor.getAttributes("link").href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-[#6b6258] hover:bg-[#fbf9f6] transition-colors"
+                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors"
                                         title="访问链接"
                                     >
                                         <ExternalLink size={14} />

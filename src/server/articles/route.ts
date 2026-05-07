@@ -4,7 +4,8 @@ import { articles } from "@/db/schema";
 import { desc, eq, isNull, isNotNull } from "drizzle-orm";
 import { isNil } from "lodash";
 import { zValidator } from "@hono/zod-validator";
-import { createArticleSchema, updateArticleSchema } from "./schema";
+import { z } from "zod";
+import { createArticleSchema, updateArticleSchema, aiAssistantSchema, aiAssistantResponseSchema } from "./schema";
 import { describeRoute } from "hono-openapi";
 import {
     create201SuccessResponse,
@@ -28,6 +29,7 @@ import {
 } from "./service";
 import { createHonoApp } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
+import { reflectionAgent } from "../agent";
 
 export const articleTags = ["文章操作"];
 export const articleApi = createHonoApp()
@@ -77,8 +79,52 @@ export const articleApi = createHonoApp()
             }
         },
     )
-
-
+    .post(
+        "/ai-assistant",
+        zValidator("json", aiAssistantSchema),
+        describeRoute({
+            tags: articleTags,
+            summary: "AI 助理反思问答",
+            description: "调用基于 LangGraph 的反思智能体，由 AI 自动审查多轮直到生成完美答案",
+            responses: {
+                ...createSuccessResponse(aiAssistantResponseSchema),
+                ...createServerErrorResponse("AI 生成失败"),
+            },
+        }),
+        AuthProtectedMiddleware,
+        async (c) => {
+            const { prompt } = await c.req.valid("json");
+            
+            try {
+                // 调用我们在 agent 里写好的 LangGraph
+                const result = await reflectionAgent.invoke({
+                    messages: [{ role: "user", content: prompt }]
+                });
+                
+                // 如果最后一条消息是审查员的 PERFECT 许可，那么实际的答案其实在倒数第二条里
+                const lastMsg = result.messages[result.messages.length - 1];
+                const finalContent = typeof lastMsg.content === 'string' && lastMsg.content.includes("PERFECT")
+                    ? result.messages[result.messages.length - 2].content
+                    : lastMsg.content;
+                
+                // 把完整的思考过程也返回给前端（可用于做酷炫的“思考链” UI 展示）
+                const fullHistory = result.messages.map((m: any) => ({
+                    role: m._getType ? m._getType() : "unknown",
+                    content: m.content
+                }));
+                
+                return c.json({ 
+                    data: { 
+                        response: finalContent, 
+                        history: fullHistory 
+                    } 
+                });
+            } catch (error) {
+                console.error("Agent Error:", error);
+                return c.json({ message: "AI 生成失败，请检查 API Key 或网络环境" }, 500);
+            }
+        }
+    )
     .post(
         "/",
         zValidator("json", createArticleSchema),

@@ -36,25 +36,69 @@
 }
 
 :root {
-    --radius: 0.875rem;
-    --background: oklch(0.986 0.009 85.5);
-    --foreground: oklch(0.235 0.012 60.2);
-    --card: oklch(0.996 0.006 84.3);
-    --card-foreground: oklch(0.235 0.012 60.2);
-    --popover: oklch(0.996 0.006 84.3);
-    --popover-foreground: oklch(0.235 0.012 60.2);
-    --primary: oklch(0.37 0.04 63.5);
-    --primary-foreground: oklch(0.985 0.002 84.1);
-    --secondary: oklch(0.958 0.012 84.1);
-    --secondary-foreground: oklch(0.282 0.015 61.4);
-    --muted: oklch(0.95 0.008 80.5);
-    --muted-foreground: oklch(0.51 0.014 61.2);
-    --accent: oklch(0.948 0.018 76.2);
-    --accent-foreground: oklch(0.282 0.015 61.4);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.905 0.01 78.4);
-    --input: oklch(0.905 0.01 78.4);
-    --ring: oklch(0.72 0.022 70.5);
+    /* 稍微硬朗一点的圆角，增加科技感 */
+    --radius: 0.5rem; 
+    
+    /* === 极简科技感：白天模式 (Light Mode) === */
+    --background: oklch(0.98 0.005 260); /* 极度干净的冷白 */
+    --foreground: oklch(0.15 0.01 260); /* 深邃的文字颜色 */
+    
+    --card: oklch(1 0 0); /* 纯白卡片 */
+    --card-foreground: oklch(0.15 0.01 260);
+    
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.15 0.01 260);
+    
+    /* 主色调：克制的深邃科技蓝 */
+    --primary: oklch(0.55 0.15 240);
+    --primary-foreground: oklch(0.98 0 0);
+    
+    --secondary: oklch(0.94 0.01 260);
+    --secondary-foreground: oklch(0.25 0.01 260);
+    
+    --muted: oklch(0.94 0.01 260);
+    --muted-foreground: oklch(0.45 0.01 260);
+    
+    --accent: oklch(0.92 0.02 240);
+    --accent-foreground: oklch(0.15 0.01 260);
+    
+    --destructive: oklch(0.55 0.18 20);
+    
+    --border: oklch(0.88 0.01 260);
+    --input: oklch(0.88 0.01 260);
+    
+    --ring: oklch(0.55 0.15 240);
+}
+
+.dark {
+    /* === 极简科技感：夜间模式 (Dark Mode) === */
+    --background: oklch(0.15 0.01 260); 
+    --foreground: oklch(0.95 0.01 260);
+    
+    --card: oklch(0.18 0.01 260);
+    --card-foreground: oklch(0.95 0.01 260);
+    
+    --popover: oklch(0.18 0.01 260);
+    --popover-foreground: oklch(0.95 0.01 260);
+    
+    --primary: oklch(0.75 0.15 240);
+    --primary-foreground: oklch(0.15 0.01 260);
+    
+    --secondary: oklch(0.22 0.01 260);
+    --secondary-foreground: oklch(0.95 0.01 260);
+    
+    --muted: oklch(0.22 0.01 260);
+    --muted-foreground: oklch(0.65 0.01 260);
+    
+    --accent: oklch(0.25 0.02 240);
+    --accent-foreground: oklch(0.95 0.01 260);
+    
+    --destructive: oklch(0.55 0.18 20);
+    
+    --border: oklch(0.25 0.01 260);
+    --input: oklch(0.25 0.01 260);
+    
+    --ring: oklch(0.75 0.15 240);
 }
 
 @layer base {
@@ -65,11 +109,18 @@
         scroll-behavior: smooth;
     }
     body {
-        @apply bg-background text-foreground antialiased;
-        background-image: radial-gradient(circle at top, rgba(214, 188, 136, 0.14), transparent 28%);
+        @apply bg-background text-foreground antialiased transition-colors duration-300;
+        background-attachment: fixed;
     }
+    
+    .dark body {
+        /* 仅在夜间模式下投下科技光晕 */
+        background-image: 
+            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 200, 255, 0.12), transparent 80%);
+    }
+    
     ::selection {
-        background: rgba(217, 180, 95, 0.25);
-        color: #1f1d1a;
+        background: rgba(0, 200, 255, 0.25);
+        color: white;
     }
 }

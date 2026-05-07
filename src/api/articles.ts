@@ -17,4 +17,10 @@ export const articlesApi = {
 
     delete: async (id: string) =>
         fetchApi(articleClient, (c) => c[":id"].$delete({ param: { id } })),
+
+    trash: async () =>
+        fetchApi(articleClient, (c) => c.trash.$get()),
+
+    restore: async (id: string) =>
+        fetchApi(articleClient, (c) => c[":id"].restore.$patch({ param: { id } })),
 };
