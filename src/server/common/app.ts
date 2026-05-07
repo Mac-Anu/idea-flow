@@ -4,6 +4,8 @@ import { createRedisClients } from "@/lib/redis";
 import { ServerIncs } from "./type";
 import { createQueues } from "@/lib/queue";
 import { addUserQueueWorker } from "../user/queue";
+import { createMeilisearchClients } from "@/lib/meilisearch";
+import { ensureArticleSearchIndex } from "../articles/search/service";
 
 // 重新导出 getBaseUrl 以保持向后兼容性
 export { getBaseUrl } from "@/lib/app";
@@ -21,6 +23,7 @@ export const createHonoApp = <E extends Env>() => {
 export const serverIncs: ServerIncs = {
     redis: {},
     queues: {},
+    meilisearch: {},
 };
 
 /**
@@ -29,5 +32,7 @@ export const serverIncs: ServerIncs = {
 export const beforeServer = async () => {
     serverIncs.redis = createRedisClients();
     serverIncs.queues = createQueues(serverIncs.redis);
+    serverIncs.meilisearch = createMeilisearchClients();
     await addUserQueueWorker();
+    await ensureArticleSearchIndex();
 };

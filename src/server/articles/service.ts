@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { articles } from "@/db/schema";
 import { eq, or, isNull, desc, isNotNull, ilike, and } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
+import { syncArticleSearchDocument, deleteArticleSearchDocument, searchArticlesWithMeili } from "./search/service";
 
 /**
  * 复合查询单篇文章
@@ -67,6 +68,12 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
         .insert(articles)
         .values(insertData)
         .returning();
+    
+    // 触发搜索引擎同步
+    if (createArticle) {
+        await syncArticleSearchDocument(createArticle.id);
+    }
+    
     return createArticle;
 };
 
@@ -85,6 +92,12 @@ export const updateArticleItem = async (id: string, data: UpdateArticleInput, us
         .set({ ...data, updatedAt: new Date() })
         .where(and(eq(articles.id, id), eq(articles.userId, userId)))
         .returning();
+    
+    // 触发搜索引擎同步
+    if (updateArticle) {
+        await syncArticleSearchDocument(updateArticle.id);
+    }
+    
     return updateArticle;
 };
 
@@ -102,6 +115,12 @@ export const deleteArticleItem = async (id: string, userId: string) => {
         .set({ deleteAt: new Date() })
         .where(and(eq(articles.id, id), eq(articles.userId, userId)))
         .returning();
+    
+    // 从搜索引擎彻底移除软删除的文章
+    if (deleteArticle) {
+        await deleteArticleSearchDocument(deleteArticle.id);
+    }
+    
     return deleteArticle;
 };
 
@@ -153,30 +172,17 @@ export const restoreArticleItem = async (id: string, userId: string) => {
 };
 
 /**
- * 检索/全文搜索文章
+ * 检索/全文搜索文章 (已升级为 Meilisearch 引擎)
  * 支持仅搜标题，或标题+正文联合检索。自动过滤已删除数据。
  * 
  * @param query - 搜索关键字
  * @param titleOnly - 是否仅在标题中检索 (默认: false)
  * @param userId - 当前操作用户的 ID
- * @returns 符合条件的文章列表
+ * @returns 符合条件的文章列表（携带 _formatted 高亮字段）
  */
 export const searchArticles = async (query: string, titleOnly: boolean = false, userId: string) => {
-    const searchResults = await db
-        .select()
-        .from(articles)
-        .where(
-            and(
-                isNull(articles.deleteAt),
-                titleOnly
-                    ? ilike(articles.title, `%${query}%`)
-                    : or(
-                          ilike(articles.title, `%${query}%`),
-                          ilike(articles.content, `%${query}%`),
-                      ),
-                eq(articles.userId, userId),
-            ),
-        );
+    // 调用我们在 search/service.ts 里封装的高级搜索引擎接口
+    const searchResults = await searchArticlesWithMeili(query, titleOnly, userId);
     return searchResults;
 };
 
