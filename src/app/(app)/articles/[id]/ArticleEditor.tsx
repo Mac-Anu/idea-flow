@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, Globe, GlobeLock } from "lucide-react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
 import { TableOfContents } from "@/components/article/editor/TableOfContents";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useArticleEditor } from "@/components/article/hooks";
 import type { Article } from "@/server/articles/type";
 
@@ -15,6 +16,8 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
         tags,
         isSaving,
         saved,
+        isPublished,
+        isPublishing,
         headings,
         editor,
         titleRef,
@@ -27,6 +30,8 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
         handleTitleKeyDown,
         handleSave,
         handleDelete,
+        handlePublish,
+        handleUnpublish,
     } = useArticleEditor(article);
 
     const [isAddingTag, setIsAddingTag] = useState(false);
@@ -64,6 +69,39 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                 </div>
 
                 <div className="flex items-center gap-3 self-start lg:self-auto">
+                    {/* 发布状态与按钮 */}
+                    {isPublished ? (
+                        <button
+                            onClick={handleUnpublish}
+                            disabled={isPublishing}
+                            className={cn(
+                                "flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                                "hover:bg-emerald-500/20",
+                                isPublishing && "opacity-50 cursor-not-allowed",
+                            )}
+                            title="点击取消发布"
+                        >
+                            <Globe size={15} />
+                            {isPublishing ? "处理中..." : "已发布"}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handlePublish}
+                            disabled={isPublishing}
+                            className={cn(
+                                "flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                "border-primary/20 bg-primary/10 text-primary",
+                                "hover:bg-primary/20 hover:shadow-[0_4px_16px_rgba(0,200,255,0.15)]",
+                                isPublishing && "opacity-50 cursor-not-allowed",
+                            )}
+                            title="发布到公开博客"
+                        >
+                            <GlobeLock size={15} />
+                            {isPublishing ? "发布中..." : "发布"}
+                        </button>
+                    )}
+
                     <button
                         onClick={handleDelete}
                         className={cn(
@@ -74,6 +112,9 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                     >
                         <Trash2 size={17} />
                     </button>
+                    
+                    <div className="h-6 w-px bg-border/60 mx-1"></div>
+                    <ThemeToggle />
                 </div>
             </div>
 

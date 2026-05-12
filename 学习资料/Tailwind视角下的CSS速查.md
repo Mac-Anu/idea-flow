@@ -61,6 +61,22 @@
 
 ---
 
+## 四、溢出与滚动 (Overflow & Scroll) —— 驯服超长内容
+
+当你的盒子装不下内容（比如目录太长“顶穿天际”）时，你需要控制溢出的部分：
+
+- **`overflow-hidden` (隐藏溢出)**：超出盒子大小的内容直接咔嚓一刀切掉，看不见了。
+- **`overflow-y-auto` (自动垂直滚动条)**：内容超高了？没关系，限制死盒子的最大高度（比如 `max-h-[60vh]`），超出的部分变成可以上下滚动的列表。
+- **`scrollbar-hide` / `hidden-scrollbar` (隐藏滚动条但保留滚动)**：让列表依然可以用鼠标滚轮/触控板滑动，但是隐藏丑陋的滚动条，保持极客感。
+  > 实战：Tailwind 可以用自定义 CSS 配合 `[&::-webkit-scrollbar]:hidden` 和 `scrollbar-width: none` 来实现。
+
+> **✨ 高级特效：渐变遮罩 (`mask-image`)**
+> 如果你用 `overflow-hidden` 生硬地切断了文字或线条，看起来会很丑。此时可以加一个神仙特效，让上下两端变透明：
+> `style={{ maskImage: "linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)" }}`
+> 这个技巧在实现“无限滚动文字”、“缩略导航条”时极度丝滑！
+
+---
+
 ## 🚀 总结
 在实战的时候，如果大脑空白不知道怎么布局，按照这个思路闭眼问自己：
 1. **这里要并排吗？要居中对齐吗？** ➔ 立刻敲下 `flex`！

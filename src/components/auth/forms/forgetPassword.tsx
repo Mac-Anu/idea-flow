@@ -60,18 +60,18 @@ function FormComponent() {
                     name="credential"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">
+                            <FormLabel className="text-sm font-medium text-white/70">
                                 账号 / 邮箱
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     placeholder="请输入您的用户名或邮箱地址"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -81,7 +81,7 @@ function FormComponent() {
                     name="otp"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">
+                            <FormLabel className="text-sm font-medium text-white/70">
                                 验证码
                             </FormLabel>
                             <FormControl>
@@ -89,7 +89,7 @@ function FormComponent() {
                                     <Input
                                         placeholder="6位数字验证码"
                                         maxLength={6}
-                                        className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5] flex-1"
+                                        className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30 flex-1"
                                         disabled={form.formState.isSubmitting || isPending}
                                         {...field}
                                     />
@@ -98,13 +98,13 @@ function FormComponent() {
                                         variant="outline"
                                         disabled={disableSendBtn}
                                         onClick={sendOTPHandler}
-                                        className="rounded-xl h-11 px-4 font-medium border-[#c8a96e]/30 text-[#5e5448] hover:bg-[#fdfaf5] hover:text-[#3a342e] whitespace-nowrap"
+                                        className="rounded-xl h-11 px-4 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white whitespace-nowrap bg-transparent"
                                     >
                                         {buttonText}
                                     </Button>
                                 </div>
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -114,19 +114,19 @@ function FormComponent() {
                     name="password"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">
+                            <FormLabel className="text-sm font-medium text-white/70">
                                 新密码
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
                                     placeholder="请输入新密码（至少 6 位）"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -136,19 +136,19 @@ function FormComponent() {
                     name="plainPassword"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">
+                            <FormLabel className="text-sm font-medium text-white/70">
                                 确认新密码
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
                                     placeholder="请再次输入新密码"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -157,14 +157,14 @@ function FormComponent() {
                     <Button
                         type="submit"
                         disabled={form.formState.isSubmitting || isPending}
-                        className="w-full bg-[#1f1d1a] hover:bg-[#3a342e] text-white rounded-xl shadow-sm h-11 font-medium transition-colors"
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
                     >
                         {(form.formState.isSubmitting || isPending) ? "提交中..." : "重置密码"}
                     </Button>
                     <Button 
                         asChild 
                         variant="outline"
-                        className="w-full rounded-xl h-11 font-medium border-[#c8a96e]/30 text-[#5e5448] hover:bg-[#fdfaf5] hover:text-[#3a342e]"
+                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white bg-transparent"
                     >
                         <Link href={signinUrl}>返回登录</Link>
                     </Button>

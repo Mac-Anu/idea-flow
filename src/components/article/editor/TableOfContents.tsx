@@ -1,6 +1,6 @@
 "use client";
 import { Editor } from "@tiptap/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Heading {
     level: number;
@@ -15,6 +15,8 @@ export const TableOfContents = ({
     headings: Heading[];
     editor: Editor | null;
 }) => {
+    const dashesContainerRef = useRef<HTMLDivElement>(null);
+    const tocContainerRef = useRef<HTMLDivElement>(null);
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const filtered = headings.filter((h) => h.level <= 3);
 
@@ -58,6 +60,43 @@ export const TableOfContents = ({
         return () => observer.disconnect();
     }, [editor, filtered.length]);
 
+    // 监听 activeIndex 变化，自动滚动目录容器以保证当前高亮项始终在视口内
+    useEffect(() => {
+        if (filtered.length === 0 || activeIndex === null) return;
+
+        // 1. 同步滚动左侧的横线容器
+        if (dashesContainerRef.current) {
+            const activeDash = dashesContainerRef.current.children[activeIndex] as HTMLElement;
+            if (activeDash) {
+                dashesContainerRef.current.scrollTo({
+                    top: activeDash.offsetTop - dashesContainerRef.current.offsetHeight / 2,
+                    behavior: "smooth"
+                });
+            }
+        }
+
+        // 2. 同步滚动右侧展开的面板
+        if (tocContainerRef.current) {
+            const listContainer = tocContainerRef.current.querySelector('.toc-list') as HTMLElement;
+            if (listContainer) {
+                const activeToc = listContainer.children[activeIndex] as HTMLElement;
+                if (activeToc) {
+                    const topPos = activeToc.offsetTop;
+                    // 当元素快要超出视口时，将面板中心对齐该元素
+                    if (
+                        topPos < tocContainerRef.current.scrollTop + 40 || 
+                        topPos > tocContainerRef.current.scrollTop + tocContainerRef.current.offsetHeight - 40
+                    ) {
+                        tocContainerRef.current.scrollTo({
+                            top: topPos - tocContainerRef.current.offsetHeight / 2,
+                            behavior: "smooth"
+                        });
+                    }
+                }
+            }
+        }
+    }, [activeIndex, filtered.length]);
+
     const handleClick = (pos: number, index: number) => {
         if (!editor) return;
         setActiveIndex(index);
@@ -75,11 +114,18 @@ export const TableOfContents = ({
     return (
         <div className="group fixed right-6 xl:right-10 top-1/2 -translate-y-1/2 z-50">
             {/* 竖线指示器（默认显示，hover 时隐藏） */}
-            <div className="flex flex-col gap-3.5 items-end transition-opacity duration-300 group-hover:opacity-0 cursor-pointer">
+            <div 
+                ref={dashesContainerRef}
+                className="flex flex-col gap-3.5 items-end transition-opacity duration-300 group-hover:opacity-0 cursor-pointer max-h-[60vh] overflow-hidden py-[10vh]"
+                style={{ 
+                    WebkitMaskImage: "linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)",
+                    maskImage: "linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)"
+                }}
+            >
                 {filtered.map((h, i) => (
                     <div
                         key={i}
-                        className="h-[2px] rounded-full transition-all duration-300"
+                        className="h-[2px] rounded-full transition-all duration-300 shrink-0"
                         style={{
                             width: activeIndex === i ? "20px" : `${20 - (h.level - 1) * 6}px`,
                             background: activeIndex === i ? "var(--primary)" : "var(--border)",
@@ -91,18 +137,24 @@ export const TableOfContents = ({
 
             {/* TOC 面板（默认隐藏，hover 时滑入） */}
             <div
+                ref={tocContainerRef}
                 className="absolute right-0 top-1/2 -translate-y-1/2
                 opacity-0 pointer-events-none translate-x-4
                 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0
                 transition-all duration-300 ease-out
-                bg-popover backdrop-blur-md border border-border rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-5
+                bg-popover backdrop-blur-md border border-border rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] 
                 min-w-[180px] max-w-[260px]
                 text-[13px] text-muted-foreground leading-relaxed max-h-[70vh] overflow-y-auto"
             >
-                <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-muted-foreground/70 mb-3 select-none">
-                    Contents
-                </p>
-                <div className="space-y-1.5">
+                {/* 固定在顶部的标题 */}
+                <div className="sticky top-0 bg-popover/95 backdrop-blur-sm z-10 px-5 pt-5 pb-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-muted-foreground/70 select-none">
+                        Contents
+                    </p>
+                </div>
+                
+                {/* 滚动的目录列表 */}
+                <div className="space-y-1.5 toc-list px-5 pb-5">
                     {filtered.map((h, i) => (
                         <div
                             key={i}

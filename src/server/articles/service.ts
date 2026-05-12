@@ -209,3 +209,53 @@ export const queryAllTags = async (userId: string) => {
     });
     return Array.from(tagSet);
 };
+
+/**
+ * 发布文章
+ * 设置 publishedAt 时间戳，使文章在公开博客首页可见
+ * 
+ * @param id - 目标文章 ID
+ * @param userId - 当前操作用户的 ID (鉴权用)
+ * @returns 更新后的文章记录
+ */
+export const publishArticleItem = async (id: string, userId: string) => {
+    const [publishedArticle] = await db
+        .update(articles)
+        .set({ publishedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .returning();
+    return publishedArticle;
+};
+
+/**
+ * 取消发布文章
+ * 清除 publishedAt 时间戳，将文章恢复为私有草稿
+ * 
+ * @param id - 目标文章 ID
+ * @param userId - 当前操作用户的 ID (鉴权用)
+ * @returns 更新后的文章记录
+ */
+export const unpublishArticleItem = async (id: string, userId: string) => {
+    const [unpublishedArticle] = await db
+        .update(articles)
+        .set({ publishedAt: null, updatedAt: new Date() })
+        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .returning();
+    return unpublishedArticle;
+};
+
+/**
+ * 获取所有已发布的公开文章（无需鉴权）
+ * 仅返回 publishedAt 非空且未删除的文章，按发布时间倒序排列
+ * 
+ * @returns 公开文章列表数组
+ */
+export const queryPublishedArticles = async () => {
+    const publishedList = await db
+        .select()
+        .from(articles)
+        .where(and(isNull(articles.deleteAt), isNotNull(articles.publishedAt)))
+        .orderBy(desc(articles.publishedAt));
+    return publishedList;
+};
+

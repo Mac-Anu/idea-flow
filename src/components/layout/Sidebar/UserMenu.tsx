@@ -28,7 +28,7 @@ export const UserMenu = () => {
 
     const handleSignOut = async () => {
         await authClient.signOut();
-        router.push("/sign-in");
+        router.push("/");
     };
 
     const handleUploadClick = () => {

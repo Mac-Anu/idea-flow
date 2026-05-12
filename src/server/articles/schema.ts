@@ -7,6 +7,7 @@ export const ArticleSchema = z.object({
     slug: z.string().nullable().optional().meta({ description: "短链接别名" }),
     imageUrl: z.string().nullable().optional().meta({ description: "文章封面图片URL" }),
     tags: z.array(z.string()).nullable().optional().meta({ description: "文章标签数组" }),
+    publishedAt: z.string().nullable().optional().meta({ description: "文章发布时间，null 表示草稿" }),
     createdAt: z.string().meta({ description: "文章创建时间" }),
     updatedAt: z.string().meta({ description: "文章更新时间" }),
     deleteAt: z.string().nullable().meta({ description: "文章删除时间" }),
@@ -31,6 +32,12 @@ export const updateArticleSchema = z
         tags: z.array(z.string()).optional().meta({ description: "修改后的标签" }),
     })
     .meta({ description: "修改文章的请求参数格式" });
+
+export const publishArticleSchema = z
+    .object({
+        published: z.boolean().meta({ description: "true 为发布，false 为取消发布" }),
+    })
+    .meta({ description: "发布/取消发布文章的请求参数格式" });
 
 export const aiAssistantSchema = z
     .object({

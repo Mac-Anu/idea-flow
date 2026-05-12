@@ -9,13 +9,13 @@ import {
     FileText,
     MoreHorizontal,
     PenSquare,
+    Home,
 } from "lucide-react";
 import { AllArticlesModal } from "./modals/AllArticlesModal";
 import { SearchModal } from "./modals/SearchModal";
 import { TrashModal } from "./modals/TrashModal";
 import { UserMenu } from "./UserMenu";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Article } from "@/server/articles/type";
@@ -167,6 +167,7 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
 
             <div className="border-t border-border px-4 py-4">
                 <div className="space-y-1">
+                    <SidebarLink icon={<Home size={15} />} label="返回首页" href="/" />
                     <button
                         onClick={() => setIsTrashOpen(true)}
                         className="w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-accent/50 hover:text-foreground"
@@ -175,9 +176,6 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                         <span className="truncate">回收站</span>
                     </button>
                     <SidebarLink icon={<Settings size={15} />} label="设置" href="#" />
-                    <div className="pt-2">
-                        <ThemeToggle />
-                    </div>
                 </div>
             </div>
         </aside>

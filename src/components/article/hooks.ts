@@ -13,6 +13,8 @@ export const useArticleEditor = (article: Article) => {
     const [tags, setTags] = useState<string[]>(article.tags || []);
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [isPublished, setIsPublished] = useState(!!article.publishedAt);
+    const [isPublishing, setIsPublishing] = useState(false);
     const [headings, setHeadings] = useState<{ level: number; text: string; pos: number }[]>([]);
     const titleRef = useRef<HTMLInputElement>(null);
     const contentRef = useRef<HTMLTextAreaElement>(null);
@@ -115,12 +117,52 @@ export const useArticleEditor = (article: Article) => {
         }
     };
 
+    // 发布
+    const handlePublish = async () => {
+        setIsPublishing(true);
+        try {
+            const res = await client.api.articles[":id"].publish.$patch({
+                param: { id: article.id },
+                json: { published: true },
+            });
+            if (res.ok) {
+                setIsPublished(true);
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("发布失败:", error);
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
+    // 取消发布
+    const handleUnpublish = async () => {
+        setIsPublishing(true);
+        try {
+            const res = await client.api.articles[":id"].publish.$patch({
+                param: { id: article.id },
+                json: { published: false },
+            });
+            if (res.ok) {
+                setIsPublished(false);
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("取消发布失败:", error);
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
     return {
         title,
         content,
         tags,
         isSaving,
         saved,
+        isPublished,
+        isPublishing,
         headings,
         editor,
         titleRef,
@@ -134,5 +176,8 @@ export const useArticleEditor = (article: Article) => {
         handleTitleKeyDown,
         handleSave,
         handleDelete,
+        handlePublish,
+        handleUnpublish,
     };
 };
+

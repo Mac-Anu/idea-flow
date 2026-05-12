@@ -44,15 +44,15 @@ function FormComponent() {
                     name="username"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">账号 / 邮箱</FormLabel>
+                            <FormLabel className="text-sm font-medium text-white/70">账号 / 邮箱</FormLabel>
                             <FormControl>
                                 <Input
                                     placeholder="请输入您的用户名或邮箱"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -62,16 +62,16 @@ function FormComponent() {
                     name="password"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-[#5e5448]">密码</FormLabel>
+                            <FormLabel className="text-sm font-medium text-white/70">密码</FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
                                     placeholder="请输入密码"
-                                    className="bg-[#fdfaf5] border-black/5 focus-visible:ring-[#c8a96e] focus-visible:border-[#dec9a0] rounded-xl h-11 text-[#1f1d1a] placeholder:text-[#c7b9a5]"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-500" />
+                            <FormMessage className="text-xs text-red-400" />
                         </FormItem>
                     )}
                 />
@@ -79,7 +79,7 @@ function FormComponent() {
                 <div className="flex justify-end">
                     <Link
                         href="/forget-password"
-                        className="text-sm text-[#c8a96e] hover:text-[#b0925c] transition-colors"
+                        className="text-sm text-cyan-400/70 hover:text-cyan-300 transition-colors"
                     >
                         忘记密码？
                     </Link>
@@ -89,14 +89,14 @@ function FormComponent() {
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="w-full bg-[#1f1d1a] hover:bg-[#3a342e] text-white rounded-xl shadow-sm h-11 font-medium transition-colors"
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
                     >
                         {isPending ? "登录中..." : "立即登录"}
                     </Button>
                     <Button 
                         asChild 
                         variant="outline"
-                        className="w-full rounded-xl h-11 font-medium border-[#c8a96e]/30 text-[#5e5448] hover:bg-[#fdfaf5] hover:text-[#3a342e]"
+                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white bg-transparent"
                     >
                         <Link href={signupUrl}>前往注册</Link>
                     </Button>

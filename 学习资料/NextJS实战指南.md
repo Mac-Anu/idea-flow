@@ -96,6 +96,30 @@ app/
 
 每一层 `layout.tsx` 会自动包裹里面所有的子页面，实现"页面切换时，侧边栏不会重新加载"的丝滑效果。
 
+### 4. 避坑指南：水合（Hydration）与 DOM 操作
+
+当你在 Client Component 中使用 `dangerouslySetInnerHTML` 并尝试用 JS 原生查询 DOM 时，**千万不要预先把真实 DOM 节点或 ID 存到 State/Ref 里！**
+
+**问题场景：**
+React 在客户端进行 Hydration（水合）时，可能会丢弃原有的 DOM 节点并重新创建（尤其在遇到内容不一致或者复杂更新时）。如果你一开始用 `document.getElementById(id)` 绑定了元素，后续跳转或监听时就会发现节点已失效/丢失（报错 Null 或点击没反应）。
+
+**终极解法：**
+永远在事件触发的**那一瞬间**，去动态查询真实的 DOM 节点：
+```tsx
+// ❌ 错误做法：在 useEffect 里获取节点并存下来，或者给它加 ID 存 ID
+useEffect(() => {
+    const els = contentRef.current.querySelectorAll("h1");
+    setHeadingEls(els); // Hydration 后，这些存下来的节点可能被 React 扔掉变成了死节点
+}, []);
+
+// ✅ 正确做法：不要存 DOM，只存索引。点击时动态抓取当前页面最新的 DOM
+const handleClick = (index) => {
+    const els = Array.from(contentRef.current.querySelectorAll("h1, h2, h3"));
+    const el = els[index];
+    el.scrollIntoView();
+};
+```
+
 ---
 
 > **💡 一句话总结**

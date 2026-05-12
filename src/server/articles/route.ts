@@ -5,7 +5,7 @@ import { desc, eq, isNull, isNotNull } from "drizzle-orm";
 import { isNil } from "lodash";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { createArticleSchema, updateArticleSchema, aiAssistantSchema, aiAssistantResponseSchema } from "./schema";
+import { createArticleSchema, updateArticleSchema, aiAssistantSchema, aiAssistantResponseSchema, publishArticleSchema } from "./schema";
 import { describeRoute } from "hono-openapi";
 import {
     create201SuccessResponse,
@@ -26,6 +26,9 @@ import {
     restoreArticleItem,
     searchArticles,
     queryAllTags,
+    publishArticleItem,
+    unpublishArticleItem,
+    queryPublishedArticles,
 } from "./service";
 import { createHonoApp } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
@@ -52,6 +55,26 @@ export const articleApi = createHonoApp()
                 return c.json({ data });
             } catch (error) {
                 return c.json({ message: "查询文章列表失败" }, 500);
+            }
+        },
+    )
+    .get(
+        "/public",
+        describeRoute({
+            tags: articleTags,
+            summary: "公开文章列表",
+            description: "获取所有已发布的公开文章，无需登录",
+            responses: {
+                ...createSuccessResponse(createArticleSchema),
+                ...createServerErrorResponse("查询公开文章失败"),
+            },
+        }),
+        async (c) => {
+            try {
+                const data = await queryPublishedArticles();
+                return c.json({ data });
+            } catch (error) {
+                return c.json({ message: "查询公开文章失败" }, 500);
             }
         },
     )
@@ -269,5 +292,29 @@ export const articleApi = createHonoApp()
             const userId = c.get("user")!.id;
             const restoreArticle = await restoreArticleItem(id, userId);
             return c.json({ restoreArticle });
+        },
+    )
+    .patch(
+        "/:id/publish",
+        zValidator("json", publishArticleSchema),
+        describeRoute({
+            tags: articleTags,
+            summary: "发布/取消发布文章",
+            description: "将文章发布到公开博客或取消发布恢复为草稿",
+            responses: {
+                ...createSuccessResponse(createArticleSchema),
+                ...createNotFoundErrorResponse("文章不存在"),
+                ...createServerErrorResponse("发布操作失败"),
+            },
+        }),
+        AuthProtectedMiddleware,
+        async (c) => {
+            const id = c.req.param("id");
+            const userId = c.get("user")!.id;
+            const { published } = await c.req.valid("json");
+            const article = published
+                ? await publishArticleItem(id, userId)
+                : await unpublishArticleItem(id, userId);
+            return c.json({ article });
         },
     );
