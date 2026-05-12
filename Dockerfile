@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 启用 pnpm
-RUN corepack enable
+# 启用 pnpm (固定版本，防止 GitHub Actions 环境版本不一致导致安装失败)
+RUN npm install -g pnpm@10.33.2
 
 # 2. 拷贝包管理文件 (如果你的项目是 monorepo，有 workspace.yaml 也会一并拷入)
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
@@ -20,7 +20,7 @@ RUN pnpm build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g pnpm@10.33.2
 
 # 6. 从 builder 阶段把构建好的产物和依赖拷过来
 COPY --from=builder /app/package.json ./
