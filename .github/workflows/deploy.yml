@@ -1,0 +1,51 @@
+name: Deploy Next.js App
+
+# 触发条件：只要 push 代码到 main 分支，就立刻开工！
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 把你的代码拉取到 GitHub 云端虚拟机
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. 登录你刚才配好的 Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 3. 按你根目录的 Dockerfile 疯狂打包，然后上传！
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/idea-flow:latest
+
+      # 4. 用你的私钥偷偷连上云服务器，下达重启命令
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 进入你服务器部署好的大本营
+            cd /opt/idea-flow
+            
+            # 拉取刚才 GitHub 送过来的新鲜热乎的镜像
+            docker compose pull
+            
+            # 无缝重启容器
+            docker compose up -d
+            
+            # 打扫战场：清理掉无用的旧镜像碎片，保持硬盘充足
+            docker system prune -f
