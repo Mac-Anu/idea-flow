@@ -14,47 +14,82 @@
 
 > **目标**：不依赖图形界面，在黑色终端里存活下来，并高效完成文件与系统操作。
 
-### 1. 📂 文件与目录操作
+### 1. 📂 文件与目录操作 (进阶必备)
 
-作为开发，你 90% 的时间都在用这些。
+作为开发，你 90% 的时间都在用这些。要想显得专业，熟练掌握它们的高级参数（带杠的字母）非常重要。
 
-#### `pwd` - 我现在在哪
-- `pwd`: 打印当前目录（Print Working Directory）。SSH 进服务器后先敲一次，能避免在错误目录操作。
+#### `pwd` - 确认我在哪
+- `pwd`: 打印当前绝对路径（Print Working Directory）。
+  - **业界习惯**：SSH 登录进服务器后、执行任何危险删除操作前，先敲一次 `pwd` 确认路径，防止误操作。
 
 #### `ls` - 看看有什么
-- `ls`: 简单列出。
-- `ls -la`: **最常用**。列出所有文件（包括隐藏的 `.env`、`.git`）并显示详细信息（权限、大小、修改时间）。
+- `ls`: 仅列出当前目录下的可见文件名。
+- `ls -l`: 以长格式（列表）显示文件的权限、所有者、大小和修改时间。
+- `ls -la`: **最常用**。列出所有文件，包括以点开头的隐藏文件（如 `.env`、`.git`）。
+- `ls -lah`: **高级版**。在 `-la` 的基础上加上 `h` (human-readable)，把文件大小从字节变成可读的 K、M、G。
+  - *例子*: `ls -lah /var/log` 查看日志目录，文件大小一目了然。
 
-#### `cd` - 跳来跳去
-- `cd /var/www`: 去指定目录。
-- `cd ~`: 回家（当前用户的 home 目录）。
-- `cd ..`: 回上一级。
-- `cd -`: **神器**。回到“刚才那个”目录。
+#### `cd` - 目录穿梭
+- `cd /var/www`: 跳转到指定的绝对路径。
+- `cd ~`: 瞬间回到当前用户的家目录（Home）。
+- `cd ..`: 回退到上一级父目录。
+- `cd -`: **效率神器**。回到你“上一次”所在的那个目录，适合在两个极远的目录间反复横跳。
 
 #### `mkdir` - 建房子
-- `mkdir my-app`: 建一个文件夹。
-- `mkdir -p a/b/c`: 递归创建目录。
+- `mkdir my-app`: 在当前目录下建一个文件夹。
+- `mkdir -p a/b/c`: **极其常用**。递归创建目录（Parents）。如果你要建 `a/b/c` 但 `a` 和 `b` 都不存在，不加 `-p` 会报错，加上则会顺藤摸瓜全部建好。
 
-#### `rm` - 删除
-- `rm file.txt`: 删文件。
-- `rm -rf node_modules`: 强制递归删除目录。
-  - ⚠️ 这个命令很危险，路径写错就是事故。
+#### `rm` - 危险的删除操作
+- `rm file.txt`: 删掉一个普通文件。
+- `rm -r folder`: 递归删除（Recursive），用来删文件夹及其内部所有东西。
+- `rm -f file.txt`: 强制删除（Force），即使文件只读也不会弹提示问你。
+- `rm -rf node_modules/`: **核武器**。强制且递归地删除目录。由于它极度危险，**执行前务必再三确认路径**。千万不要手滑敲成 `rm -rf /`（这会把整个操作系统删光）。
 
 #### `cp` & `mv` - 复制与搬家
-- `cp .env.example .env`: 复制配置模板。
-- `cp -r src src_backup`: 备份整个文件夹。
-- `mv old.ts new.ts`: 改名本质上也是移动。
+- `cp .env.example .env`: 复制一个文件并重命名。
+- `cp -r src/ src_backup/`: 递归复制（Recursive），用来备份整个文件夹。
+- `cp -a src/ src_backup/`: **高级版备份**（Archive）。不仅复制内容，连原文件的修改时间、权限等属性也一并完美复刻。
+- `mv old.ts new.ts`: 移动文件。如果在同目录下移动，本质上就是**重命名**。
 
-#### `tar` & `wget` - 下载与解压
-- `wget https://example.com/file.zip`: 下载文件。
-- `tar -xvf archive.tar.gz`: 解压 `.tar.gz`。
+#### `tar` - 压缩与解压
+- `tar -czvf archive.tar.gz folder/`: **压缩**。将 folder 打包并压缩为 `.tar.gz`。
+  - `-c` (create): 创建压缩包。
+  - `-z` (gzip): 使用 gzip 算法压缩（体积更小）。
+  - `-v` (verbose): 屏幕上显示压缩过程。
+  - `-f` (file): 指定输出的文件名。
+- `tar -xzvf archive.tar.gz`: **解压**。
+  - `-x` (extract): 提取、解压。
 
-#### `find` - 全盘搜索
-- `find / -name "nginx.conf"`: 在整个系统中找配置文件。
+#### `find` - 全盘精准搜索
+- `find /var/www -name "*.log"`: 在 `/var/www` 下搜索所有以 `.log` 结尾的文件。
+- `find . -type d -name "node_modules"`: 精确搜索当前目录（`.`）下的所有**文件夹**（`-type d`，d代表directory），名字叫 `node_modules`。
 
-#### `less` - 安全看大文件
-- `less app.log`: 分页查看大文件，不会像 `cat` 一样直接刷满屏幕。
-- 在 `less` 里输入 `/error` 搜索，按 `n` 跳到下一个结果。
+#### `less` & `tail` - 查看文件
+- `less app.log`: 安全地分页查看大文件。按空格翻页，按 `q` 退出。
+  - 为什么不用 `cat app.log`？因为如果日志有 10个G，`cat` 会瞬间把内存撑爆或者让终端刷屏卡死。
+- `tail -n 50 app.log`: 查看文件最后 50 行内容。
+- `tail -f app.log`: **排错神器**（Follow）。实时追踪文件的最新追加内容，非常适合盯着程序跑日志！按 `Ctrl+C` 退出。
+
+#### `ln` - 创建快捷方式 (软链接)
+- `ln -s /绝对路径/真实文件夹 /绝对路径/快捷方式名`: 创建软连接（Symbolic link）。
+  - *例子*: `ln -s /opt/idea-flow /var/www/idea-flow`。这在 Nginx 部署和多版本管理中非常高频。
+
+---
+
+### 1.5 💻 系统监控 (运维必会)
+
+遇到服务卡死、报错时，首先要排查是不是机器资源耗尽了。
+
+#### `df` - 查硬盘空间
+- `df -h`: 显示所有挂载磁盘的剩余空间（`-h` 代表 Human-readable）。
+  - 如果 `/` (根目录) 的 Use% 达到 100%，你的所有数据库和程序都会崩溃。
+
+#### `free` - 查内存
+- `free -h` 或 `free -m`: 查看系统当前剩余内存（`-m` 以 MB 为单位）。
+
+#### `top` / `htop` - 查 CPU 与系统负载
+- `top`: 系统自带的资源监控面板。按 `q` 退出。
+- `htop`: （需要通过 `apt install htop` 安装）。彩色的增强版 `top`，支持鼠标点击和树状视图，**强烈推荐**。
 
 ---
 
@@ -278,11 +313,33 @@ export BETTER_AUTH_SECRET="..."
 
 对 TS 全栈项目来说，真正上线通常就这几步。
 
-#### 最小上线链路
+#### 最小上线链路与极速跨服拷贝 (rsync / scp)
+当你本地代码写完，打出了 `.next` 包，如何最快传到服务器上？
+
+**方案 A：`scp` 暴力直传（适合偶发单次文件）**
+最简单的拷贝命令，无脑覆盖：
+```bash
+# -r 代表递归拷贝整个文件夹
+scp -r .next root@服务器IP:/var/www/idea-flow/
+```
+*(注意：多次使用 scp 覆盖 `.next` 会堆积大量历史垃圾文件，撑爆硬盘)*
+
+**方案 B：`rsync` 企业级增量同步（强烈推荐）**
+它会对比两边的差异，只传改过的文件，且能自动删除本地已经删掉的旧垃圾：
+```bash
+# -avz: 保留权限、显示进度、压缩流量
+# --delete: 关键参数！删除服务器上多余的历史 chunk 文件
+rsync -avz --delete .next/ root@服务器IP:/var/www/idea-flow/.next/
+
+# 顺手把静态文件和包管理也带上：
+rsync -avz public/ root@服务器IP:/var/www/idea-flow/public/
+rsync -avz package.json pnpm-lock.yaml root@服务器IP:/var/www/idea-flow/
+```
+
+在服务器上接收完代码后，进行重启：
 ```bash
 pnpm install --frozen-lockfile
-pnpm build
-HOSTNAME=0.0.0.0 PORT=3000 NODE_ENV=production pnpm start
+pm2 restart idea-flow
 ```
 
 #### 每一步在干什么
@@ -516,12 +573,22 @@ chmod +x deploy.sh
 
 外部用户一般访问 `80/443`，真正的 Node 服务通常只监听 `3000`。Nginx 负责把两边接起来。
 
-#### 核心配置示例
+#### 核心配置示例与实战命令 (IdeaFlow 项目为例)
+
+**1. 安装 Nginx**
+```bash
+sudo apt update
+sudo apt install nginx -y
+```
+
+**2. 编写反向代理配置**
+`sudo nano /etc/nginx/sites-available/ideaflow`
 ```nginx
 server {
     listen 80;
-    server_name my-website.com;
+    server_name _; # 如果有域名填域名，没有填 _ 代表接收所有IP访问
 
+    # 1. 代理主业务 (Next.js)
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -531,7 +598,20 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
+    
+    # 2. 代理搜索引擎 (Meilisearch) - 选配
+    location /search/ {
+        proxy_pass http://127.0.0.1:7700;
+    }
 }
+```
+
+**3. 激活配置与重启**
+```bash
+# 删掉默认无关配置
+sudo rm /etc/nginx/sites-enabled/default
+# 创建软链接激活配置
+sudo ln -s /etc/nginx/sites-available/ideaflow /etc/nginx/sites-enabled/
 ```
 
 #### 改完配置后不要直接 reload

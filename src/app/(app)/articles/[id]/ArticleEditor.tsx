@@ -8,7 +8,7 @@ import { TableOfContents } from "@/components/article/editor/TableOfContents";
 import { useArticleEditor } from "@/components/article/hooks";
 import type { Article } from "@/server/articles/type";
 
-export const ArticleEditor = ({ article }: { article: Article }) => {
+export const ArticleEditor = ({ article, highlight }: { article: Article; highlight?: string }) => {
     const {
         title,
         content,
@@ -134,6 +134,7 @@ export const ArticleEditor = ({ article }: { article: Article }) => {
                     onChange={(newContent) => setContent(newContent)}
                     onHeadingsChange={(newHeadings) => setHeadings(newHeadings)}
                     onEditorReady={(e) => setEditor(e)}
+                    highlight={highlight}
                 />
                 <TableOfContents headings={headings} editor={editor} />
             </div>

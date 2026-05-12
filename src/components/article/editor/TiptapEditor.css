@@ -190,3 +190,18 @@
     background: #444;
     color: #fff;
 }
+
+/* ===== 搜索高亮匹配项 ===== */
+.search-highlight-match {
+    background-color: rgba(250, 204, 21, 0.4); /* Tailwind yellow-400 with opacity */
+    border-radius: 3px;
+    padding: 0.1em 0.2em;
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.5);
+    animation: highlight-pulse 2s ease-in-out 3; /* Pulse 3 times */
+}
+
+@keyframes highlight-pulse {
+    0% { background-color: rgba(250, 204, 21, 0.4); box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.5); }
+    50% { background-color: rgba(250, 204, 21, 0.7); box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.8); }
+    100% { background-color: rgba(250, 204, 21, 0.4); box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.5); }
+}

@@ -32,7 +32,14 @@ export const serverIncs: ServerIncs = {
 export const beforeServer = async () => {
     serverIncs.redis = createRedisClients();
     serverIncs.queues = createQueues(serverIncs.redis);
-    serverIncs.meilisearch = createMeilisearchClients();
     await addUserQueueWorker();
-    await ensureArticleSearchIndex();
+
+    // MeiliSearch 初始化：优雅降级，连不上不影响核心功能（登录、验证码等）
+    try {
+        serverIncs.meilisearch = createMeilisearchClients();
+        await ensureArticleSearchIndex();
+        console.log('[MeiliSearch] ✅ 搜索引擎初始化成功');
+    } catch (error) {
+        console.warn('[MeiliSearch] ⚠️ 搜索引擎初始化失败，全文搜索功能暂不可用:', (error as Error).message);
+    }
 };

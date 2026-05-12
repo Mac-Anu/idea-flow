@@ -11,8 +11,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     });
 
     if (!res.ok) {
-        // 服务端一旦发现没有获取数据的权限，立刻发起硬跳转让你去登录
-        redirect("/sign-in");
+        // 服务端一旦发现没有获取数据的权限，携带 expired 标志跳转到登录页
+        // 配合 middleware，可以实现静默清除无效 Cookie，完美解决鬼打墙问题
+        redirect("/sign-in?expired=1");
     }
     const { data: articles } = await res.json();
 

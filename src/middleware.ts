@@ -71,6 +71,17 @@ const authPageProtectedHandler = (request: NextRequest) => {
 // 登录/注册页面处理函数：处理已经登录就不能再访问的页面
 const authSignInHandler = (request: NextRequest) => {
     try {
+        // 如果是从业务组件被踢回来的（带着 expired 标志）
+        const isExpired = request.nextUrl.searchParams.get("expired") === "1";
+        
+        if (isExpired) {
+            // 放行到登录页，并在这个响应中强行抹除浏览器残留的死 Cookie
+            const response = NextResponse.next();
+            response.cookies.delete("better-auth.session_token");
+            response.cookies.delete("__Secure-better-auth.session_token");
+            return response;
+        }
+
         const isAuthenticated = checkIsAuthenticated(request);
 
         if (isAuthenticated) {

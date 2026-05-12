@@ -10,7 +10,7 @@ import { ArticleEditor } from "./ArticleEditor";
  * - 点击即刻显示骨架屏，无需等待服务器
  * - 支持乐观导航：若文章还在创建中（404），自动轮询直到可读
  */
-export function ArticleEditorWrapper({ id }: { id: string }) {
+export function ArticleEditorWrapper({ id, highlight }: { id: string; highlight?: string }) {
     const [article, setArticle] = useState<Article | null>(null);
     const [notFound, setNotFound] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -94,5 +94,5 @@ export function ArticleEditorWrapper({ id }: { id: string }) {
         );
     }
 
-    return <ArticleEditor article={article!} />;
+    return <ArticleEditor article={article!} highlight={highlight} />;
 }
