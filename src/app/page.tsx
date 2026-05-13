@@ -47,30 +47,30 @@ export default async function Home() {
                         </div>
                         <span className="text-lg font-semibold tracking-tight text-foreground">IdeaFlow</span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <ThemeToggle />
                         {user ? (
                             <>
-                                <Link href="/articles">
-                                    <button className="px-4 py-2 bg-transparent text-muted-foreground text-sm font-medium rounded-full hover:bg-muted hover:text-foreground border border-transparent transition-all">
+                                <Link href="/articles" className="hidden sm:block">
+                                    <button className="px-4 py-2 bg-transparent text-muted-foreground text-sm font-medium rounded-full hover:bg-muted hover:text-foreground border border-transparent transition-all whitespace-nowrap">
                                         {user.displayUsername || user.username || user.name || "User"}
                                     </button>
                                 </Link>
                                 <Link href="/articles">
-                                    <button className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:brightness-110 transition-all shadow-sm">
+                                    <button className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:brightness-110 transition-all shadow-sm whitespace-nowrap">
                                         开始写作
                                     </button>
                                 </Link>
                             </>
                         ) : (
                             <>
-                                <Link href="/sign-in">
-                                    <button className="px-4 py-2 bg-transparent text-muted-foreground text-sm font-medium rounded-full hover:bg-muted hover:text-foreground border border-transparent transition-all">
+                                <Link href="/sign-in" className="hidden sm:block">
+                                    <button className="px-4 py-2 bg-transparent text-muted-foreground text-sm font-medium rounded-full hover:bg-muted hover:text-foreground border border-transparent transition-all whitespace-nowrap">
                                         请登录
                                     </button>
                                 </Link>
                                 <Link href="/sign-in">
-                                    <button className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:brightness-110 transition-all shadow-sm">
+                                    <button className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:brightness-110 transition-all shadow-sm whitespace-nowrap">
                                         登录
                                     </button>
                                 </Link>

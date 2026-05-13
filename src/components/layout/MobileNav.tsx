@@ -31,19 +31,19 @@ export const MobileNav = ({ articles }: { articles: Article[] }) => {
     return (
         <>
             {/* 顶部的移动端极简 Header */}
-            <div className="flex lg:hidden items-center justify-between bg-[rgba(255,251,245,0.88)] backdrop-blur-md border border-black/5 rounded-[24px] px-5 py-3 mb-4 shadow-[0_4px_20px_rgba(33,24,14,0.03)] z-40 relative">
+            <div className="flex lg:hidden items-center justify-between bg-card/60 backdrop-blur-xl border border-border rounded-[24px] px-5 py-3 mb-4 shadow-sm z-40 relative">
                 <div className="flex items-center gap-3">
                     <button 
                         onClick={() => setIsOpen(true)}
-                        className="p-2 bg-white text-[#8a6a2f] rounded-[12px] border border-black/5 hover:bg-[#f3ead8] transition shadow-sm"
+                        className="p-2 bg-background text-muted-foreground rounded-[12px] border border-border hover:bg-accent hover:text-foreground transition shadow-sm"
                     >
                         <Menu size={18} />
                     </button>
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-[#1f1d1a] rounded-[10px] flex items-center justify-center shadow-sm">
-                            <Sparkles className="w-4 h-4 text-[#f3ead8]" />
+                        <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-[10px] flex items-center justify-center shadow-sm">
+                            <Sparkles className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-semibold text-[16px] text-[#1f1d1a] tracking-tight">IdeaFlow</span>
+                        <span className="font-semibold text-[16px] text-foreground tracking-tight">IdeaFlow</span>
                     </div>
                 </div>
             </div>
