@@ -75,22 +75,37 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                             onClick={handleUnpublish}
                             disabled={isPublishing}
                             className={cn(
-                                "flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                "group flex w-[110px] items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
                                 "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                                "hover:bg-emerald-500/20",
+                                "hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive dark:hover:text-red-400",
                                 isPublishing && "opacity-50 cursor-not-allowed",
                             )}
                             title="点击取消发布"
                         >
-                            <Globe size={15} />
-                            {isPublishing ? "处理中..." : "已发布"}
+                            {isPublishing ? (
+                                <>
+                                    <Globe size={15} />
+                                    <span>处理中...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="flex items-center gap-2 group-hover:hidden">
+                                        <Globe size={15} />
+                                        已发布
+                                    </span>
+                                    <span className="hidden items-center gap-2 group-hover:flex">
+                                        <X size={15} />
+                                        取消发布
+                                    </span>
+                                </>
+                            )}
                         </button>
                     ) : (
                         <button
                             onClick={handlePublish}
                             disabled={isPublishing}
                             className={cn(
-                                "flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                "flex w-[110px] items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
                                 "border-primary/20 bg-primary/10 text-primary",
                                 "hover:bg-primary/20 hover:shadow-[0_4px_16px_rgba(0,200,255,0.15)]",
                                 isPublishing && "opacity-50 cursor-not-allowed",

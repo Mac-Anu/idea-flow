@@ -45,23 +45,25 @@ interface Heading {
 }
 
 // 自定义代码块的 React 渲染组件（右上角带语言选择器）
-function CodeBlockView({ node, updateAttributes, extension }: any) {
+function CodeBlockView({ node, updateAttributes, editor }: any) {
     const language = node.attrs.language || "javascript";
 
     return (
         <NodeViewWrapper className="code-block-wrapper">
-            <select
-                className="code-block-language-select"
-                contentEditable={false}
-                value={language}
-                onChange={(e) => updateAttributes({ language: e.target.value })}
-            >
-                {LANGUAGES.map((lang) => (
-                    <option key={lang.value} value={lang.value}>
-                        {lang.label}
-                    </option>
-                ))}
-            </select>
+            {editor?.isEditable && (
+                <select
+                    className="code-block-language-select"
+                    contentEditable={false}
+                    value={language}
+                    onChange={(e) => updateAttributes({ language: e.target.value })}
+                >
+                    {LANGUAGES.map((lang) => (
+                        <option key={lang.value} value={lang.value}>
+                            {lang.label}
+                        </option>
+                    ))}
+                </select>
+            )}
             <pre data-language={language}>
                 {/* @ts-ignore -- as="code" works at runtime, types only allow "div" */}
                 <NodeViewContent as="code" />
@@ -191,12 +193,14 @@ export const TiptapEditor = ({
     onHeadingsChange,
     onEditorReady,
     highlight,
+    readOnly = false,
 }: {
     content: string;
-    onChange: (value: string) => void;
+    onChange?: (value: string) => void;
     onHeadingsChange?: (headings: Heading[]) => void;
     onEditorReady?: (editor: Editor) => void;
     highlight?: string;
+    readOnly?: boolean;
 }) => {
     const [isLinkPanelOpen, setIsLinkPanelOpen] = useState(false);
     const [linkHref, setLinkHref] = useState("");
@@ -244,9 +248,10 @@ export const TiptapEditor = ({
             createSearchHighlightExtension() as any,
         ],
         content: content,
+        editable: !readOnly,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            onChange?.(editor.getHTML());
             onHeadingsChange?.(extractHeadings(editor));
         },
         onCreate: ({ editor }) => {
