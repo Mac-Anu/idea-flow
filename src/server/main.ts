@@ -5,6 +5,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { openAPIRouteHandler } from "hono-openapi";
 import { authRoutes } from "./user/routes/auth";
 import { tagRoutes } from "./tag/route";
+import { agentApi } from "./agent/route";
 import { createErrorResult } from "./common/error";
 
 const app = createHonoApp().basePath("/api");
@@ -17,7 +18,8 @@ app.onError((err, c) => {
 const routes = app
     .route("/articles", articleApi)
     .route("/tags", tagRoutes)
-    .route("/auth", authRoutes);
+    .route("/auth", authRoutes)
+    .route("/agent", agentApi);
 
 // Swagger 接口文档
 app.get("/swagger", swaggerUI({ url: "/api/openapi" }));

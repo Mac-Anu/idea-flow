@@ -97,7 +97,25 @@ export const useArticleEditor = (article: Article) => {
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [title, content, tags]);
+    }, [title, content, tags, debouncedAutoSave, handleSave]);
+
+    // 监听 AI 的 Function Calling (事件驱动)
+    useEffect(() => {
+        const handleAIEdit = (e: Event) => {
+            const customEvent = e as CustomEvent<{ content: string }>;
+            if (customEvent.detail?.content) {
+                // 1. 更新 React 状态
+                setContent(customEvent.detail.content);
+                // 2. 强制更新 Tiptap 编辑器实例
+                if (editor) {
+                    editor.commands.setContent(customEvent.detail.content);
+                }
+            }
+        };
+
+        window.addEventListener('ai-edit-article', handleAIEdit);
+        return () => window.removeEventListener('ai-edit-article', handleAIEdit);
+    }, [editor]);
 
     // 删除
     const handleDelete = async () => {

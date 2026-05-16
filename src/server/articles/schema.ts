@@ -39,15 +39,3 @@ export const publishArticleSchema = z
     })
     .meta({ description: "发布/取消发布文章的请求参数格式" });
 
-export const aiAssistantSchema = z
-    .object({
-        prompt: z.string().min(1, "提示词不能为空").meta({ description: "发送给AI助手的问题或内容" }),
-    })
-    .meta({ description: "调用AI助手的请求参数格式" });
-
-export const aiAssistantResponseSchema = z
-    .object({
-        response: z.string().meta({ description: "最终生成的完美回答" }),
-        history: z.array(z.any()).optional().meta({ description: "完整的反思审查对话历史链" }),
-    })
-    .meta({ description: "AI助手返回的响应数据格式" });
