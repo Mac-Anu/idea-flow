@@ -1,41 +1,26 @@
-import { Sparkles, ArrowRight, Calendar, Tag } from "lucide-react";
+import { Sparkles, ArrowRight, Calendar, Tag, Clock } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-
-async function getPublishedArticles() {
-    const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
-    try {
-        const res = await fetch(`${baseUrl}/api/articles/public`, {
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return [];
-        const { data } = await res.json();
-        return data || [];
-    } catch {
-        return [];
-    }
-}
-
-function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
-}
-
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
-}
+import { articlesApi } from "@/api/articles";
+import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/article";
+import { ArticleList } from "@/components/home/ArticleList";
 
 export default async function Home() {
-    const articles = await getPublishedArticles();
-    
-    // 获取用户会话状态
+    // ========== 数据层 ==========
+    const articles = await articlesApi.published();
+
     const session = await auth.api.getSession({
         headers: await headers(),
     });
     const user = session?.user;
 
+    const allTags = collectTags(articles);
+    const featured = articles.length > 0 ? articles[0] : null;
+    const restArticles = articles.slice(1);
+
+    // ========== 视图层 ==========
     return (
         <div className="min-h-screen bg-background text-foreground font-sans">
             {/* Header */}
@@ -80,73 +65,125 @@ export default async function Home() {
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <main className="pt-32 pb-12 px-6">
+            <main className="pt-28 pb-12 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/20 text-primary text-xs font-semibold mb-8">
+                    {/* Hero */}
+                    <div className="mb-12">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/20 text-primary text-xs font-semibold mb-5">
                             <Sparkles className="w-3.5 h-3.5" />
                             <span className="tracking-wide">个人技术博客</span>
                         </div>
 
-                        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
+                        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-foreground mb-4 leading-[1.1]">
                             思考、记录、<span className="text-primary">分享</span>
                         </h1>
 
-                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-base text-muted-foreground max-w-2xl leading-relaxed">
                             这里记录了我的技术探索、项目复盘与成长思考。每一篇文章都是经过深度打磨的知识沉淀。
                         </p>
                     </div>
 
-                    {/* Article List */}
                     {articles.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {articles.map((article: any) => (
-                                <Link
-                                    key={article.id}
-                                    href={`/blog/${article.slug || article.id}`}
-                                    className="group"
-                                >
-                                    <article className="h-full p-6 rounded-[24px] border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 flex flex-col">
-                                        {/* Tags */}
-                                        {article.tags && article.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {article.tags.slice(0, 3).map((tag: string) => (
+                        <div className="flex flex-col lg:flex-row gap-10">
+                            {/* 左侧：主内容区 */}
+                            <div className="flex-1 min-w-0">
+                                {/* 特色文章 */}
+                                {featured && (
+                                    <Link href={`/blog/${featured.slug || featured.id}`} className="group block mb-10">
+                                        <article className="relative p-8 rounded-[24px] border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+                                            <div className="absolute top-6 right-6">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+                                                    <Sparkles className="w-3 h-3" />
+                                                    最新发布
+                                                </span>
+                                            </div>
+
+                                            {featured.tags && featured.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    {featured.tags.slice(0, 4).map((tag: string) => (
+                                                        <span
+                                                            key={tag}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium"
+                                                        >
+                                                            <Tag className="w-2.5 h-2.5" />
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <h2 className="text-2xl md:text-3xl font-bold text-card-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
+                                                {featured.title}
+                                            </h2>
+
+                                            <p className="text-base text-muted-foreground leading-relaxed line-clamp-3 mb-6">
+                                                {stripHtml(featured.content).slice(0, 250)}
+                                            </p>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        {formatDate(featured.publishedAt)}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        {estimateReadTime(featured.content)} 分钟阅读
+                                                    </span>
+                                                </div>
+                                                <span className="flex items-center gap-1.5 text-sm text-primary font-medium group-hover:gap-2.5 transition-all">
+                                                    阅读全文
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </span>
+                                            </div>
+                                        </article>
+                                    </Link>
+                                )}
+
+                                {/* 文章列表 */}
+                                <ArticleList
+                                    articles={restArticles}
+                                    allTags={allTags}
+                                />
+                            </div>
+
+                            {/* 右侧：侧边栏 */}
+                            <aside className="w-full lg:w-[280px] shrink-0">
+                                <div className="lg:sticky lg:top-24 space-y-8">
+                                    {/* 统计概览 */}
+                                    <div className="rounded-[20px] border border-border bg-card p-6">
+                                        <h3 className="text-sm font-semibold text-foreground mb-4 tracking-wide">博客概览</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center p-3 rounded-xl bg-muted/50">
+                                                <p className="text-2xl font-bold text-foreground">{articles.length}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">篇文章</p>
+                                            </div>
+                                            <div className="text-center p-3 rounded-xl bg-muted/50">
+                                                <p className="text-2xl font-bold text-foreground">{allTags.length}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">个标签</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 标签云 */}
+                                    {allTags.length > 0 && (
+                                        <div className="rounded-[20px] border border-border bg-card p-6">
+                                            <h3 className="text-sm font-semibold text-foreground mb-4 tracking-wide">标签</h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {allTags.slice(0, 15).map((tag) => (
                                                     <span
-                                                        key={tag}
-                                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium border border-primary/20"
+                                                        key={tag.name}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-muted/30 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-colors cursor-default"
                                                     >
-                                                        <Tag className="w-2.5 h-2.5" />
-                                                        {tag}
+                                                        {tag.name}
+                                                        <span className="text-[10px] opacity-50">({tag.count})</span>
                                                     </span>
                                                 ))}
                                             </div>
-                                        )}
-
-                                        {/* Title */}
-                                        <h2 className="text-lg font-semibold text-card-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                                            {article.title}
-                                        </h2>
-
-                                        {/* Excerpt */}
-                                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-4 flex-1">
-                                            {stripHtml(article.content).slice(0, 150)}...
-                                        </p>
-
-                                        {/* Footer */}
-                                        <div className="flex items-center justify-between pt-4 border-t border-border">
-                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <Calendar className="w-3 h-3" />
-                                                {formatDate(article.publishedAt)}
-                                            </div>
-                                            <div className="flex items-center gap-1 text-xs text-primary/70 group-hover:text-primary transition-colors">
-                                                阅读全文
-                                                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                            </div>
                                         </div>
-                                    </article>
-                                </Link>
-                            ))}
+                                    )}
+                                </div>
+                            </aside>
                         </div>
                     ) : (
                         <div className="text-center py-20">

@@ -19,15 +19,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <div className="mx-auto flex flex-col lg:flex-row min-h-screen w-full max-w-[1440px] gap-4 lg:gap-6 px-4 py-4 lg:px-6 lg:py-6">
-                <div className="hidden lg:block shrink-0">
+            <div className="flex flex-col lg:flex-row h-screen w-full">
+                <div className="hidden lg:flex w-[260px] shrink-0 border-r border-border bg-background">
                     <Sidebar articles={articles} />
                 </div>
                 
                 <MobileNav articles={articles} />
 
-                <main className="relative flex-1 overflow-y-auto rounded-[32px] border border-border bg-card shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
-                    <div className="mx-auto h-full max-w-5xl px-6 py-8 lg:px-12 lg:py-10">{children}</div>
+                <main className="relative flex-1 overflow-y-auto bg-background">
+                    <div className="h-full w-full px-6 py-8 lg:px-12 lg:py-10">{children}</div>
                 </main>
             </div>
         </div>

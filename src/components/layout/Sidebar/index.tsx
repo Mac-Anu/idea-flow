@@ -42,7 +42,7 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
     } = useSidebar(articles);
 
     return (
-        <aside ref={sidebarRef} className="sticky top-0 z-50 flex h-[calc(100vh-2rem)] w-[300px] shrink-0 flex-col overflow-hidden rounded-[28px] border border-border bg-card/60 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+        <aside ref={sidebarRef} className="sticky top-0 z-50 flex h-screen w-[260px] shrink-0 flex-col overflow-hidden border-r border-border bg-card/60 backdrop-blur-xl">
             <div className="border-b border-border px-5 pb-5 pt-6">
                 <UserMenu />
             </div>
