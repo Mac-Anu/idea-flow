@@ -11,15 +11,39 @@ import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import "./TiptapEditor.css";
 import { useState, useRef, useEffect } from "react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Link as LinkIcon, Copy, Trash2, ExternalLink } from "lucide-react";
+import { Link as LinkIcon, Copy, Trash2, ExternalLink, ImagePlus } from "lucide-react";
+import mermaid from "mermaid";
 
 const lowlight = createLowlight(common);
+mermaid.initialize({ 
+    startOnLoad: false, 
+    theme: "default",
+    fontFamily: "inherit",
+    // @ts-ignore - 强制忽略类型报错，使用真实的原生尺寸而非被容器强行压缩
+    useMaxWidth: false,
+    themeVariables: {
+        fontSize: "15px",
+    },
+    gantt: {
+        fontSize: 14,
+        sectionFontSize: 14,
+        barHeight: 30, // 增加横条高度
+        leftPadding: 100, // 增加左侧留白防止文字被截断
+        // @ts-ignore
+        useWidth: 1200, // 强制甘特图最小宽度，防止被挤压
+    }
+});
 
 import { useRouter } from "next/navigation";
 
@@ -47,9 +71,28 @@ interface Heading {
 // 自定义代码块的 React 渲染组件（右上角带语言选择器）
 function CodeBlockView({ node, updateAttributes, editor }: any) {
     const language = node.attrs.language || "javascript";
+    const code = node.textContent;
+    const [svgContent, setSvgContent] = useState<string>("");
+    const [isMermaidError, setIsMermaidError] = useState(false);
+
+    useEffect(() => {
+        if (language === "mermaid" && code.trim()) {
+            const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+            mermaid
+                .render(id, code)
+                .then((result) => {
+                    setSvgContent(result.svg);
+                    setIsMermaidError(false);
+                })
+                .catch((e) => {
+                    console.error("Mermaid render error", e);
+                    setIsMermaidError(true);
+                });
+        }
+    }, [language, code]);
 
     return (
-        <NodeViewWrapper className="code-block-wrapper">
+        <NodeViewWrapper className="code-block-wrapper relative">
             {editor?.isEditable && (
                 <select
                     className="code-block-language-select"
@@ -64,10 +107,31 @@ function CodeBlockView({ node, updateAttributes, editor }: any) {
                     ))}
                 </select>
             )}
-            <pre data-language={language}>
-                {/* @ts-ignore -- as="code" works at runtime, types only allow "div" */}
-                <NodeViewContent as="code" />
-            </pre>
+            
+            {language === "mermaid" ? (
+                <div className="mermaid-preview-container flex flex-col gap-4">
+                    {editor?.isEditable && (
+                        <pre data-language={language} className="m-0 border border-border/50">
+                            {/* @ts-ignore */}
+                            <NodeViewContent as="code" />
+                        </pre>
+                    )}
+                    <div className="mermaid-preview bg-white rounded-lg p-6 overflow-x-auto shadow-sm my-2 text-slate-800" contentEditable={false}>
+                        {svgContent && !isMermaidError ? (
+                            <div className="min-w-max flex justify-center" dangerouslySetInnerHTML={{ __html: svgContent }} />
+                        ) : isMermaidError ? (
+                            <div className="text-destructive text-sm p-4 border border-destructive/20 rounded-md">图表语法错误，无法渲染</div>
+                        ) : (
+                            <div className="text-muted-foreground text-sm">渲染中...</div>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <pre data-language={language}>
+                    {/* @ts-ignore */}
+                    <NodeViewContent as="code" />
+                </pre>
+            )}
         </NodeViewWrapper>
     );
 }
@@ -192,6 +256,7 @@ export const TiptapEditor = ({
     onChange,
     onHeadingsChange,
     onEditorReady,
+    onExtractTitle,
     highlight,
     readOnly = false,
 }: {
@@ -199,15 +264,60 @@ export const TiptapEditor = ({
     onChange?: (value: string) => void;
     onHeadingsChange?: (headings: Heading[]) => void;
     onEditorReady?: (editor: Editor) => void;
+    onExtractTitle?: (title: string) => void;
     highlight?: string;
     readOnly?: boolean;
 }) => {
     const [isLinkPanelOpen, setIsLinkPanelOpen] = useState(false);
     const [linkHref, setLinkHref] = useState("");
     const [linkText, setLinkText] = useState("");
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     // 我们需要一个 ref 来防止面板内的点击事件让编辑器失去焦点
     const panelRef = useRef<HTMLDivElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+
+    // 图片上传核心函数
+    const uploadImage = async (file: File): Promise<string | null> => {
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            if (!res.ok) {
+                const err = await res.json();
+                alert(err.error || "图片上传失败");
+                return null;
+            }
+            const { url } = await res.json();
+            return url;
+        } catch {
+            alert("图片上传失败，请检查网络");
+            return null;
+        }
+    };
+
+    // 插入图片到编辑器
+    const insertImage = async (file: File) => {
+        if (!editor) return;
+        setIsUploadingImage(true);
+        const url = await uploadImage(file);
+        if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+        }
+        setIsUploadingImage(false);
+    };
+
+    // 工具栏点击上传图片
+    const handleImageUploadClick = () => {
+        imageInputRef.current?.click();
+    };
+
+    const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) await insertImage(file);
+        // 清空 input 以允许再次选择同一文件
+        if (imageInputRef.current) imageInputRef.current.value = "";
+    };
 
     function extractHeadings(editor: Editor): Heading[] {
         const headings: Heading[] = [];
@@ -224,6 +334,57 @@ export const TiptapEditor = ({
     }
 
     const editor = useEditor({
+        editorProps: {
+            handlePaste: (view, event, slice) => {
+                // 处理粘贴图片文件（如截图粘贴）
+                const items = event.clipboardData?.items;
+                if (items) {
+                    for (const item of Array.from(items)) {
+                        if (item.type.startsWith("image/")) {
+                            const file = item.getAsFile();
+                            if (file) {
+                                insertImage(file);
+                                return true; // 阻止默认粘贴行为
+                            }
+                        }
+                    }
+                }
+
+                const firstNode = slice.content.firstChild;
+                // 如果粘贴的内容是以标题开头，并且当前编辑器是空的（新文章），则自动提取为标题
+                if (firstNode && firstNode.type.name === "heading") {
+                    const isDocEmpty = view.state.doc.textContent.trim() === "";
+                    if (isDocEmpty && onExtractTitle) {
+                        onExtractTitle(firstNode.textContent);
+                        // 让原生的粘贴操作先完成，然后在下一个事件循环中删掉刚刚贴进来的第一个标题
+                        setTimeout(() => {
+                            const { state, dispatch } = view;
+                            const firstChild = state.doc.firstChild;
+                            if (firstChild && firstChild.type.name === "heading") {
+                                const tr = state.tr.deleteRange(0, firstChild.nodeSize);
+                                dispatch(tr);
+                            }
+                        }, 0);
+                    }
+                }
+                return false;
+            },
+            handleDrop: (view, event, _slice, moved) => {
+                // 只处理外部拖入的文件，不处理编辑器内部的拖拽
+                if (moved) return false;
+                const files = event.dataTransfer?.files;
+                if (files && files.length > 0) {
+                    for (const file of Array.from(files)) {
+                        if (file.type.startsWith("image/")) {
+                            event.preventDefault();
+                            insertImage(file);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+        },
         extensions: [
             StarterKit.configure({
                 codeBlock: false,
@@ -245,7 +406,20 @@ export const TiptapEditor = ({
                     class: "transition-colors cursor-pointer text-[#8a6a2f] hover:text-[#2d261f] underline underline-offset-4 decoration-black/10",
                 },
             }),
+            Image.configure({
+                inline: false,
+                allowBase64: false,
+                HTMLAttributes: {
+                    class: "rounded-lg max-w-full h-auto mx-auto my-4 shadow-sm",
+                },
+            }),
             createSearchHighlightExtension() as any,
+            Table.configure({
+                resizable: true,
+            }),
+            TableRow,
+            TableHeader,
+            TableCell,
         ],
         content: content,
         editable: !readOnly,
@@ -413,7 +587,7 @@ export const TiptapEditor = ({
                             >
                                 <span className="line-through text-[14px]">S</span>
                             </button>
-                            <div className="w-px h-4 bg-border mx-1" /> {/* 分隔线 */}
+                            <div className="w-px h-4 bg-border mx-1" />
                             <button
                                 onClick={() => {
                                     const { from, to } = editor.state.selection;
@@ -430,6 +604,18 @@ export const TiptapEditor = ({
                                 className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("link") || isLinkPanelOpen ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
                             >
                                 <LinkIcon size={14} />
+                            </button>
+                            <button
+                                onClick={handleImageUploadClick}
+                                disabled={isUploadingImage}
+                                className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors disabled:opacity-50"
+                                title="插入图片"
+                            >
+                                {isUploadingImage ? (
+                                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                ) : (
+                                    <ImagePlus size={14} />
+                                )}
                             </button>
                             {editor.isActive("link") && (
                                 <>
@@ -461,6 +647,14 @@ export const TiptapEditor = ({
                 </BubbleMenu>
             )}
             <EditorContent editor={editor} />
+            {/* 隐藏的图片文件选择器 */}
+            <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                onChange={handleImageFileChange}
+                className="hidden"
+            />
         </>
     );
 };
