@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Trash2, Plus, X, Globe, GlobeLock } from "lucide-react";
+import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize } from "lucide-react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
 import { TableOfContents } from "@/components/article/editor/TableOfContents";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -36,6 +36,7 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
 
     const [isAddingTag, setIsAddingTag] = useState(false);
     const [newTag, setNewTag] = useState("");
+    const [isFullWidth, setIsFullWidth] = useState(false);
 
     const handleAddTag = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && newTag.trim()) {
@@ -57,7 +58,7 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
     };
 
     return (
-        <div className="mx-auto max-w-4xl">
+        <div className={cn("mx-auto transition-all duration-300", isFullWidth ? "max-w-[95%] lg:max-w-[90%]" : "max-w-4xl")}>
             <div className="mb-8 flex flex-col gap-5 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -129,6 +130,16 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                     </button>
                     
                     <div className="h-6 w-px bg-border/60 mx-1"></div>
+                    <button
+                        onClick={() => setIsFullWidth(!isFullWidth)}
+                        className={cn(
+                            "rounded-2xl border border-transparent p-2.5 transition-all duration-200",
+                            isFullWidth ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                        )}
+                        title={isFullWidth ? "退出宽屏" : "宽屏模式"}
+                    >
+                        {isFullWidth ? <Minimize size={17} /> : <Maximize size={17} />}
+                    </button>
                     <ThemeToggle />
                 </div>
             </div>
@@ -190,6 +201,10 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                     onChange={(newContent) => setContent(newContent)}
                     onHeadingsChange={(newHeadings) => setHeadings(newHeadings)}
                     onEditorReady={(e) => setEditor(e)}
+                    onExtractTitle={(extractedTitle) => {
+                        setTitle(extractedTitle);
+                        updateActiveArticleTitle(extractedTitle);
+                    }}
                     highlight={highlight}
                 />
                 <TableOfContents headings={headings} editor={editor} />

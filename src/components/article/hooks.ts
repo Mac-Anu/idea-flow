@@ -101,14 +101,25 @@ export const useArticleEditor = (article: Article) => {
 
     // 监听 AI 的 Function Calling (事件驱动)
     useEffect(() => {
-        const handleAIEdit = (e: Event) => {
-            const customEvent = e as CustomEvent<{ content: string }>;
-            if (customEvent.detail?.content) {
-                // 1. 更新 React 状态
-                setContent(customEvent.detail.content);
-                // 2. 强制更新 Tiptap 编辑器实例
+        const handleAIEdit = async (e: Event) => {
+            const customEvent = e as CustomEvent<{ content?: string, title?: string, tags?: string[] }>;
+            const { content: newContent, title: newTitle, tags: newTags } = customEvent.detail || {};
+            
+            // 1. 更新标题
+            if (newTitle) {
+                setTitle(newTitle);
+            }
+            // 2. 更新标签
+            if (newTags) {
+                setTags(newTags);
+            }
+            // 3. 更新正文
+            if (newContent) {
+                setContent(newContent); // 保存原始 markdown
                 if (editor) {
-                    editor.commands.setContent(customEvent.detail.content);
+                    const { marked } = await import('marked');
+                    const html = await marked.parse(newContent);
+                    editor.commands.setContent(html);
                 }
             }
         };

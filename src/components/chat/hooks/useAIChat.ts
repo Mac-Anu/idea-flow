@@ -64,17 +64,32 @@ export const useAIChat = () => {
             if (data?.data?.response) {
                 let aiResponse = String(data.data.response);
                 
-                // 正则匹配提取 <UPDATE_EDITOR> 标签内容
+                // 正则匹配提取各项更新内容
+                const titleMatch = aiResponse.match(/<UPDATE_TITLE>([\s\S]*?)<\/UPDATE_TITLE>/);
+                const tagsMatch = aiResponse.match(/<UPDATE_TAGS>([\s\S]*?)<\/UPDATE_TAGS>/);
                 const editorMatch = aiResponse.match(/<UPDATE_EDITOR>([\s\S]*?)<\/UPDATE_EDITOR>/);
-                if (editorMatch) {
-                    const newContent = editorMatch[1].trim();
+                
+                if (titleMatch || tagsMatch || editorMatch) {
+                    const newTitle = titleMatch ? titleMatch[1].trim() : undefined;
+                    const newTags = tagsMatch ? tagsMatch[1].split(',').map(t => t.trim()).filter(Boolean) : undefined;
+                    const newContent = editorMatch ? editorMatch[1].trim() : undefined;
+
                     // 触发全局事件通知编辑器更新
-                    window.dispatchEvent(new CustomEvent('ai-edit-article', { detail: { content: newContent } }));
+                    window.dispatchEvent(new CustomEvent('ai-edit-article', { 
+                        detail: { 
+                            title: newTitle,
+                            tags: newTags,
+                            content: newContent 
+                        } 
+                    }));
                     
-                    // 从展示给用户的消息中移除这部分 Markdown
+                    // 从展示给用户的消息中移除这部分内容
+                    aiResponse = aiResponse.replace(/<UPDATE_TITLE>[\s\S]*?<\/UPDATE_TITLE>/, "");
+                    aiResponse = aiResponse.replace(/<UPDATE_TAGS>[\s\S]*?<\/UPDATE_TAGS>/, "");
                     aiResponse = aiResponse.replace(/<UPDATE_EDITOR>[\s\S]*?<\/UPDATE_EDITOR>/, "").trim();
+                    
                     if (!aiResponse) {
-                        aiResponse = "✅ 我已经根据你的要求更新了文章内容，请在左侧编辑器中查看效果！";
+                        aiResponse = "✅ 我已经根据你的要求更新了文章信息，请在左侧查看效果！";
                     }
                 }
 
