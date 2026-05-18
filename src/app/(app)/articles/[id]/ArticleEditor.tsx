@@ -140,7 +140,6 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                     >
                         {isFullWidth ? <Minimize size={17} /> : <Maximize size={17} />}
                     </button>
-                    <ThemeToggle />
                 </div>
             </div>
 

@@ -10,7 +10,10 @@ import {
     MoreHorizontal,
     PenSquare,
     Home,
+    Sun,
+    Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { AllArticlesModal } from "./modals/AllArticlesModal";
 import { SearchModal } from "./modals/SearchModal";
 import { TrashModal } from "./modals/TrashModal";
@@ -175,12 +178,30 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                         <span className="shrink-0 opacity-70"><Trash2 size={15} /></span>
                         <span className="truncate">回收站</span>
                     </button>
+                    <SidebarThemeToggle />
                     <SidebarLink icon={<Settings size={15} />} label="设置" href="#" />
                 </div>
             </div>
         </aside>
     );
 };
+
+function SidebarThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const isDark = theme === "dark";
+
+    return (
+        <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-accent/50 hover:text-foreground"
+        >
+            <span className="shrink-0 opacity-70">
+                {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </span>
+            <span className="truncate">{isDark ? "切换白天模式" : "切换夜间模式"}</span>
+        </button>
+    );
+}
 
 function SidebarLink({
     icon,
