@@ -13,10 +13,11 @@ export function stripHtml(html: string): string {
 
 /**
  * 格式化日期为中文本地化表示
- * 例如: "2026-05-17T01:00:00Z" → "2026年5月17日"
+ * 例如: "2026-05-17T01:00:00Z" 或 Date 对象 → "2026年5月17日"
  */
-export function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
+export function formatDate(dateVal: string | Date | null | undefined): string {
+    if (!dateVal) return "未知时间";
+    const d = new Date(dateVal);
     return d.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
 }
 

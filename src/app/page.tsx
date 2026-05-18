@@ -3,13 +3,13 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { articlesApi } from "@/api/articles";
+import { queryPublishedArticles } from "@/server/articles/service";
 import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/article";
 import { ArticleList } from "@/components/home/ArticleList";
 
 export default async function Home() {
     // ========== 数据层 ==========
-    const articles = await articlesApi.published();
+    const articles = await queryPublishedArticles();
 
     const session = await auth.api.getSession({
         headers: await headers(),

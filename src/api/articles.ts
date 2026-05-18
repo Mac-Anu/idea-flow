@@ -23,22 +23,4 @@ export const articlesApi = {
 
     restore: async (id: string) =>
         fetchApi(articleClient, (c) => c[":id"].restore.$patch({ param: { id } })),
-
-    /**
-     * 获取已发布的公开文章列表（无需登录）
-     * 用于首页/博客公开页面的 SSR 渲染
-     */
-    published: async () => {
-        const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
-        try {
-            const res = await fetch(`${baseUrl}/api/articles/public`, {
-                next: { revalidate: 60 },
-            });
-            if (!res.ok) return [];
-            const { data } = await res.json();
-            return data || [];
-        } catch {
-            return [];
-        }
-    },
 };
