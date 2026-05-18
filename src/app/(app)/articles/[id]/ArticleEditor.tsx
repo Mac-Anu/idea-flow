@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize } from "lucide-react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
 import { TableOfContents } from "@/components/article/editor/TableOfContents";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useArticleEditor } from "@/components/article/hooks";
 import type { Article } from "@/server/articles/type";
 
