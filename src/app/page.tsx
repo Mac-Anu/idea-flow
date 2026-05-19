@@ -8,8 +8,12 @@ import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/arti
 import { ArticleList } from "@/components/home/ArticleList";
 
 export default async function Home() {
-    // ========== 数据层 ==========
-    const articles = await queryPublishedArticles();
+    let articles: any[] = [];
+    try {
+        articles = await queryPublishedArticles();
+    } catch (e) {
+        console.warn("Failed to fetch articles during build/SSR. This is expected in CI environments without DB access.", e);
+    }
 
     const session = await auth.api.getSession({
         headers: await headers(),
