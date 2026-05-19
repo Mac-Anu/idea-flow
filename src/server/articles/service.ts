@@ -1,9 +1,17 @@
 import { isNil } from "lodash";
+import pinyin from "pinyin";
 import { db } from "@/db";
-import { articles } from "@/db/schema";
+import { articles, user } from "@/db/schema";
 import { eq, or, isNull, desc, isNotNull, ilike, and } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
 import { syncArticleSearchDocument, deleteArticleSearchDocument, searchArticlesWithMeili } from "./search/service";
+
+const getAiUserId = async () => {
+    const aiUser = await db.query.user.findFirst({
+        where: eq(user.email, "ai_bot@ideaflow.local")
+    });
+    return aiUser?.id || "NO_AI_USER";
+};
 
 /**
  * 复合查询单篇文章
@@ -53,6 +61,51 @@ export const queryArticleSlug = async (slug: string) => {
 };
 
 /**
+ * 根据标题自动生成唯一的 Slug (URL 别名)
+ * 转换汉字为拼音，过滤特殊字符，自动去重
+ * 
+ * @param title - 文章标题
+ * @returns 唯一的 slug 字符串
+ */
+export const generateUniqueSlug = async (title: string): Promise<string> => {
+    const pyList = pinyin(title, {
+        style: "normal"
+    });
+    
+    let baseSlug = pyList
+        .map(item => item[0])
+        .join("-")
+        .toLowerCase()
+        .replace(/[^a-z0-9\-]+/g, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .substring(0, 200) // 限制最大长度 200，留出空间给后缀，防止超出 DB 255 限制
+        .replace(/-$/, ""); // 如果截断刚好切在连字符上，去掉尾部的连字符
+        
+    if (!baseSlug) {
+        baseSlug = "article";
+    }
+    
+    let slug = baseSlug;
+    let count = 0;
+    while (true) {
+        const [existing] = await db
+            .select()
+            .from(articles)
+            .where(eq(articles.slug, slug));
+            
+        if (!existing) {
+            break;
+        }
+        
+        count++;
+        slug = `${baseSlug}-${count}`;
+    }
+    
+    return slug;
+};
+
+/**
  * 创建新文章
  * 支持指定 ID 创建或自动生成 ID，会自动绑定当前用户
  * 
@@ -61,9 +114,11 @@ export const queryArticleSlug = async (slug: string) => {
  * @returns 创建成功的文章记录
  */
 export const createArticleItem = async (data: CreateArticleInput, userId: string) => {
+    const slug = data.slug || await generateUniqueSlug(data.title);
+    
     const insertData = data.id
-        ? { ...data, userId }
-        : { title: data.title, content: data.content, slug: data.slug, tags: data.tags, userId };
+        ? { ...data, slug, userId }
+        : { title: data.title, content: data.content, slug, tags: data.tags, userId };
     const [createArticle] = await db
         .insert(articles)
         .values(insertData)
@@ -91,10 +146,11 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
  * @returns 更新后的文章记录
  */
 export const updateArticleItem = async (id: string, data: UpdateArticleInput, userId: string) => {
+    const aiUserId = await getAiUserId();
     const [updateArticle] = await db
         .update(articles)
         .set({ ...data, updatedAt: new Date() })
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
     // 触发搜索引擎同步
@@ -114,10 +170,11 @@ export const updateArticleItem = async (id: string, data: UpdateArticleInput, us
  * @returns 被软删除的文章记录
  */
 export const deleteArticleItem = async (id: string, userId: string) => {
+    const aiUserId = await getAiUserId();
     const [deleteArticle] = await db
         .update(articles)
         .set({ deleteAt: new Date() })
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
     // 从搜索引擎彻底移除软删除的文章
@@ -136,12 +193,23 @@ export const deleteArticleItem = async (id: string, userId: string) => {
  * @returns 文章列表数组
  */
 export const queryArticleList = async (userId: string) => {
+    const aiUserId = await getAiUserId();
+
     const articleList = await db
         .select()
         .from(articles)
-        .where(and(isNull(articles.deleteAt), eq(articles.userId, userId)))
+        .where(
+            and(
+                isNull(articles.deleteAt),
+                or(eq(articles.userId, userId), eq(articles.userId, aiUserId))
+            )
+        )
         .orderBy(desc(articles.updatedAt));
-    return articleList;
+        
+    return articleList.map(article => ({
+        ...article,
+        isAIGenerated: article.userId === aiUserId
+    }));
 };
 
 /**
@@ -152,10 +220,11 @@ export const queryArticleList = async (userId: string) => {
  * @returns 处于回收站状态的文章列表数组
  */
 export const queryArticleTrashList = async (userId: string) => {
+    const aiUserId = await getAiUserId();
     const trashList = await db
         .select()
         .from(articles)
-        .where(and(isNotNull(articles.deleteAt), eq(articles.userId, userId)));
+        .where(and(isNotNull(articles.deleteAt), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))));
     return trashList;
 };
 
@@ -168,10 +237,11 @@ export const queryArticleTrashList = async (userId: string) => {
  * @returns 执行恢复操作后的文章结果
  */
 export const restoreArticleItem = async (id: string, userId: string) => {
+    const aiUserId = await getAiUserId();
     const restoreArticle = await db
         .update(articles)
         .set({ deleteAt: null })
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)));
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))));
     return restoreArticle;
 };
 
@@ -198,11 +268,12 @@ export const searchArticles = async (query: string, titleOnly: boolean = false, 
  * @returns 不重复的标签字符串数组
  */
 export const queryAllTags = async (userId: string) => {
+    const aiUserId = await getAiUserId();
     // 查询该用户所有未删除文章的 tags 字段
     const rows = await db
         .select({ tags: articles.tags })
         .from(articles)
-        .where(and(isNull(articles.deleteAt), eq(articles.userId, userId), isNotNull(articles.tags)));
+        .where(and(isNull(articles.deleteAt), or(eq(articles.userId, userId), eq(articles.userId, aiUserId)), isNotNull(articles.tags)));
     
     // 把所有的数组展平并去重
     const tagSet = new Set<string>();
@@ -223,10 +294,11 @@ export const queryAllTags = async (userId: string) => {
  * @returns 更新后的文章记录
  */
 export const publishArticleItem = async (id: string, userId: string) => {
+    const aiUserId = await getAiUserId();
     const [publishedArticle] = await db
         .update(articles)
         .set({ publishedAt: new Date(), updatedAt: new Date() })
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     return publishedArticle;
 };
@@ -240,10 +312,11 @@ export const publishArticleItem = async (id: string, userId: string) => {
  * @returns 更新后的文章记录
  */
 export const unpublishArticleItem = async (id: string, userId: string) => {
+    const aiUserId = await getAiUserId();
     const [unpublishedArticle] = await db
         .update(articles)
         .set({ publishedAt: null, updatedAt: new Date() })
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)))
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     return unpublishedArticle;
 };

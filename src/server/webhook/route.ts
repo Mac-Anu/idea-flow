@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { db } from "@/db";
+import { user } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { createArticleItem } from "../articles/service";
 import { createErrorResult } from "../common/error";
 import { describeRoute } from "hono-openapi";
@@ -41,22 +43,63 @@ webhookApi.post(
             }
 
             // 2. 获取传递过来的文章数据
-            const { title, content, tags } = c.req.valid("json");
+            let { title, content, tags } = c.req.valid("json");
 
-            // 3. 确定要挂载的用户 (如果是个人博客，默认取数据库第一个用户)
-            const firstUser = await db.query.user.findFirst();
-            if (!firstUser) {
-                return c.json(createErrorResult("系统中没有用户，无法创建文章", null, 400), 400);
+            // 提取 Markdown 中的真实标题
+            const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let titleFound = false;
+            
+            // 策略 1：只在前 5 行寻找带 # 的大标题，防止误抓正文中间的段落小标题
+            for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                const match = lines[i].match(/^#{1,2}\s+(.+)$/);
+                if (match && match[1]) {
+                    // 去除可能带有的 Markdown 链接后缀 [](http...)
+                    title = match[1].replace(/\[\]\(.*?\)/g, '').trim();
+                    content = content.replace(lines[i], ''); // 从正文中剔除
+                    titleFound = true;
+                    break;
+                }
+            }
+
+            // 策略 2：兜底策略，如果没有 # 标题，抓第一行真正的文字
+            if (!titleFound) {
+                const textLines = lines.filter(l => !l.startsWith('>') && !l.startsWith('|'));
+                if (textLines.length > 0) {
+                    // 去除前后奇怪的标点符号和 markdown 标记
+                    title = textLines[0].replace(/^[#\*\-\"“”'\[\]]+|[#\*\-\"“”'\]\)]+$/g, '').trim();
+                }
+            }
+
+            // 导入 marked 将 Markdown 转换为 HTML，因为 Tiptap 编辑器需要 HTML
+            const { marked } = await import("marked");
+            const htmlContent = await marked.parse(content);
+
+            // 3. 为 AI 助手分配专属账号
+            const AI_EMAIL = "ai_bot@ideaflow.local";
+            let aiUser = await db.query.user.findFirst({
+                where: eq(user.email, AI_EMAIL)
+            });
+
+            if (!aiUser) {
+                // 如果不存在 AI 账号，自动创建一个
+                const [newUser] = await db.insert(user).values({
+                    id: crypto.randomUUID(),
+                    name: "IdeaFlow AI",
+                    email: AI_EMAIL,
+                    emailVerified: true,
+                    image: "https://api.dicebear.com/7.x/bottts/svg?seed=IdeaFlowAI&backgroundColor=b6e3f4"
+                }).returning();
+                aiUser = newUser;
             }
 
             // 4. 调用现成的服务插入数据库
             const article = await createArticleItem(
                 {
                     title,
-                    content,
+                    content: htmlContent, // 存入 HTML 格式供富文本编辑器渲染
                     tags,
                 },
-                firstUser.id
+                aiUser.id
             );
 
             return c.json({ data: article, message: "文章导入成功" });

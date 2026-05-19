@@ -12,6 +12,7 @@ import {
     Home,
     Sun,
     Moon,
+    Bot,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { AllArticlesModal } from "./modals/AllArticlesModal";
@@ -124,11 +125,17 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                                             <div className="min-w-0 flex-1">
                                                 <p
                                                     className={cn(
-                                                        "truncate text-sm font-medium",
+                                                        "truncate text-sm font-medium flex items-center gap-2",
                                                         isActive ? "text-foreground" : "text-muted-foreground",
                                                     )}
                                                 >
-                                                    {displayTitle}
+                                                    <span className="truncate">{displayTitle}</span>
+                                                    {article.isAIGenerated && (
+                                                        <span className="shrink-0 inline-flex items-center rounded bg-blue-50/50 px-1 py-0.5 text-[9px] font-semibold text-blue-600 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30" title="由 AI 抓取生成">
+                                                            <Bot size={10} className="mr-0.5" />
+                                                            AI
+                                                        </span>
+                                                    )}
                                                 </p>
                                                 <p className="mt-1 text-xs text-muted-foreground/70">
                                                     {isActive ? "当前编辑中" : "点击查看与编辑"}

@@ -11,6 +11,8 @@ export const ArticleSchema = z.object({
     createdAt: z.string().meta({ description: "文章创建时间" }),
     updatedAt: z.string().meta({ description: "文章更新时间" }),
     deleteAt: z.string().nullable().meta({ description: "文章删除时间" }),
+    isAIGenerated: z.boolean().optional().meta({ description: "是否由 AI 抓取生成" }),
+    userId: z.string().optional().meta({ description: "文章所属作者ID" }),
 });
 
 export const createArticleSchema = z
