@@ -69,9 +69,13 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
         .values(insertData)
         .returning();
     
-    // 触发搜索引擎同步
+    // 触发搜索引擎同步 (加入 try-catch 防止搜索服务宕机导致文章无法保存)
     if (createArticle) {
-        await syncArticleSearchDocument(createArticle.id);
+        try {
+            await syncArticleSearchDocument(createArticle.id);
+        } catch (e) {
+            console.warn(`[Search Sync Warning] 未能同步文章 ${createArticle.id} 到搜索引擎:`, e);
+        }
     }
     
     return createArticle;
