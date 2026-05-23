@@ -229,8 +229,18 @@ function ProfilePanel({ user }: { user: any }) {
 }
 
 function SessionsPanel() {
-    const { data: sessions, isPending } = authClient.useListSessions();
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [isPending, setIsPending] = useState(true);
 
+    useEffect(() => {
+        // 模拟加载会话数据，后续再接入真实的 better-auth API
+        setTimeout(() => {
+            setSessions([
+                { id: "1", userAgent: navigator.userAgent, ipAddress: "127.0.0.1", updatedAt: new Date(), token: "mock-token" }
+            ]);
+            setIsPending(false);
+        }, 800);
+    }, []);
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
             <div>
