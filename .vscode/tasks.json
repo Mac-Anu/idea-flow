@@ -1,0 +1,68 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 启动项目 (pnpm dev)",
+            "type": "shell",
+            "command": "pnpm dev",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "dev-services"
+            },
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*ready in.*$",
+                    "endsPattern": "^.*ready in.*$"
+                }
+            }
+        },
+        {
+            "label": "🔍 启动搜索引擎 (Meilisearch)",
+            "type": "shell",
+            "command": "./meilisearch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "dev-services"
+            },
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*Server listening on.*$",
+                    "endsPattern": "^.*Server listening on.*$"
+                }
+            }
+        },
+        {
+            "label": "⚡ 一键启动所有开发服务",
+            "dependsOn": [
+                "🚀 启动项目 (pnpm dev)",
+                "🔍 启动搜索引擎 (Meilisearch)"
+            ],
+            "dependsOrder": "parallel",
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}

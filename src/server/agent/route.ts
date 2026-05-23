@@ -6,7 +6,9 @@ import { reflectionAgent, llm } from "./index";
 import { chatRequestSchema, chatResponseSchema, explainRequestSchema, explainResponseSchema, editorRequestSchema, editorResponseSchema } from "./schema";
 import { createSuccessResponse, createServerErrorResponse } from "../common/response";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-
+import { getRedisClient } from "@/lib/redis";
+import crypto from "crypto";
+import type { AuthEnv } from "../user/middlwares";
 export const agentTags = ["AI智能体"];
 export const agentApi = createHonoApp().post(
     "/chat",
@@ -23,8 +25,20 @@ export const agentApi = createHonoApp().post(
     AuthProtectedMiddleware,
     async (c) => {
         const { messages } = await c.req.valid("json");
+        const user = (c as any).get("user");
 
         try {
+            // AI 请求频率限制：每分钟最多 10 次
+            const redis = getRedisClient(serverIncs.redis);
+            const rateLimitKey = `ai:ratelimit:chat:${user?.id || "anonymous"}`;
+            const count = await redis.incr(rateLimitKey);
+            if (count === 1) {
+                await redis.expire(rateLimitKey, 60);
+            }
+            if (count > 10) {
+                return c.json({ message: "调用过于频繁，请等待一分钟后再试" }, 429);
+            }
+
             // 调用在 agent/index.ts 里写好的 LangGraph
             const result = await reflectionAgent.invoke({
                 messages: messages
@@ -71,6 +85,18 @@ export const agentApi = createHonoApp().post(
         const { text, context } = await c.req.valid("json");
 
         try {
+            // Redis 极速缓存逻辑：将划词和上下文生成唯一 MD5 Hash
+            const redis = getRedisClient(serverIncs.redis);
+            const hashInput = context ? `${text}|${context}` : text;
+            const hash = crypto.createHash("md5").update(hashInput).digest("hex");
+            const cacheKey = `ai:explain:${hash}`;
+
+            // 先查缓存，如果命中直接 0毫秒返回
+            const cachedResponse = await redis.get(cacheKey);
+            if (cachedResponse) {
+                return c.json({ data: { explanation: cachedResponse } });
+            }
+
             const systemPrompt = `你是一个专业的阅读助手。你的任务是解释用户选中的文本。
 如果选中文本是外语，请翻译为优雅的中文。
 如果选中文本是专业术语，请用通俗易懂的语言解释。
@@ -86,9 +112,14 @@ export const agentApi = createHonoApp().post(
                 new HumanMessage(userPrompt)
             ]);
 
+            const explanationText = typeof response.content === "string" ? response.content : JSON.stringify(response.content);
+
+            // 将大模型结果存入缓存，有效期 30 天
+            await redis.setex(cacheKey, 30 * 24 * 3600, explanationText);
+
             return c.json({
                 data: {
-                    explanation: response.content
+                    explanation: explanationText
                 }
             });
         } catch (error) {
@@ -112,8 +143,20 @@ export const agentApi = createHonoApp().post(
     AuthProtectedMiddleware,
     async (c) => {
         const { text, action } = await c.req.valid("json");
+        const user = (c as any).get("user");
 
         try {
+            // AI 请求频率限制：每分钟最多 10 次
+            const redis = getRedisClient(serverIncs.redis);
+            const rateLimitKey = `ai:ratelimit:editor:${user?.id || "anonymous"}`;
+            const count = await redis.incr(rateLimitKey);
+            if (count === 1) {
+                await redis.expire(rateLimitKey, 60);
+            }
+            if (count > 10) {
+                return c.json({ message: "调用过于频繁，请等待一分钟后再试" }, 429);
+            }
+
             let systemPrompt = "";
             let userPrompt = `文本：\n"${text}"`;
 

@@ -1,5 +1,7 @@
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
+import { tools } from "./tools";
 
 /**
  * @fileoverview LangGraph 反思工作流 (Self-Reflection Agent)
@@ -36,7 +38,8 @@ const graphState = MessagesAnnotation;
  * @returns 包含新消息的局部状态对象，底层机制将自动将其追加至全局状态数组中
  */
 async function generateNode(state: typeof MessagesAnnotation.State) {
-    const response = await llm.invoke(state.messages);
+    const llmWithTools = llm.bindTools(tools);
+    const response = await llmWithTools.invoke(state.messages);
     return { messages: [response] }; // 返回的新消息会自动拼接到历史记录中
 }
 
@@ -72,10 +75,16 @@ ${lastMessage.content}`;
  * @returns 目标节点的唯一标识符 ("end" 表示终止，"generate" 表示重写)
  */
 function shouldContinue(state: typeof MessagesAnnotation.State) {
-    const lastMessage = state.messages[state.messages.length - 1].content as string;
+    const lastMessage = state.messages[state.messages.length - 1];
     
+    // 如果模型决定调用工具，则路由到工具节点
+    if (lastMessage.additional_kwargs?.tool_calls?.length || (lastMessage as any).tool_calls?.length) {
+        return "tools";
+    }
+    
+    const lastMessageContent = lastMessage.content as string;
     // 若审查评价中包含 "PERFECT" 关键字，则放行输出，流程终止
-    if (lastMessage.includes("PERFECT")) {
+    if (lastMessageContent.includes("PERFECT")) {
         return "end";
     }
     // 否则驳回，重新流转至生成器节点进行修订
@@ -90,12 +99,15 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
 const workflow = new StateGraph(graphState)
     .addNode("generate", generateNode)
     .addNode("reflect", reflectNode)
+    .addNode("tools", new ToolNode(tools))
     .addEdge("__start__", "generate")
-    .addEdge("generate", "reflect")
-    .addConditionalEdges("reflect", shouldContinue, {
+    .addConditionalEdges("generate", shouldContinue, {
         end: "__end__",
-        generate: "generate"
-    });
+        generate: "reflect", // 修改为：如果不直接结束，则先反思
+        tools: "tools"
+    })
+    .addEdge("tools", "generate") // 工具执行完毕后返回生成节点
+    .addEdge("reflect", "generate");
 
 /**
  * 已编译完成的反思智能体实例

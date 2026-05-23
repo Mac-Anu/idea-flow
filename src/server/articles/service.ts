@@ -6,6 +6,8 @@ import { eq, or, isNull, desc, isNotNull, ilike, and } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
 import { searchArticlesWithMeili } from "./search/service";
 import { addSearchSyncJob, addSearchDeleteJob, addAiSummaryJob } from "./queue";
+import { getRedisClient } from "@/lib/redis";
+import { serverIncs } from "../common/app";
 
 const getAiUserId = async () => {
     const aiUser = await db.query.user.findFirst({
@@ -22,13 +24,26 @@ const getAiUserId = async () => {
  * @returns 匹配的文章实体，若未找到则返回 null
  */
 export const queryArticleItem = async (arg: string) => {
+    const redis = getRedisClient(serverIncs.redis);
+    const cacheKey = `article:detail:${arg}`;
+    
+    // 优先查缓存
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
+
     const [item] = await db
         .select()
         .from(articles)
         .where(or(eq(articles.id, arg), eq(articles.slug, arg)));
+        
     if (isNil(item)) {
         return null;
     }
+    
+    // 写入缓存，过期时间 1 小时
+    await redis.setex(cacheKey, 3600, JSON.stringify(item));
     return item;
 };
 
@@ -151,10 +166,20 @@ export const updateArticleItem = async (id: string, data: UpdateArticleInput, us
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
-    // 触发后台任务队列
+    // 触发后台任务队列和缓存清理
     if (updateArticle) {
         addSearchSyncJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
         addAiSummaryJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
+        
+        try {
+            const redis = getRedisClient(serverIncs.redis);
+            await redis.del(`article:detail:${updateArticle.id}`);
+            if (updateArticle.slug) await redis.del(`article:detail:${updateArticle.slug}`);
+            if (updateArticle.publishedAt) await redis.del("articles:public:list");
+            await redis.del(`tags:all:${userId}`);
+        } catch (e) {
+            console.warn('Redis cache clear error:', e);
+        }
     }
     
     return updateArticle;
@@ -176,9 +201,19 @@ export const deleteArticleItem = async (id: string, userId: string) => {
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
-    // 从搜索引擎后台移除软删除的文章
+    // 从搜索引擎后台移除软删除的文章并清理缓存
     if (deleteArticle) {
         addSearchDeleteJob(deleteArticle.id).catch(e => console.warn('Queue error:', e));
+        
+        try {
+            const redis = getRedisClient(serverIncs.redis);
+            await redis.del(`article:detail:${deleteArticle.id}`);
+            if (deleteArticle.slug) await redis.del(`article:detail:${deleteArticle.slug}`);
+            if (deleteArticle.publishedAt) await redis.del("articles:public:list");
+            await redis.del(`tags:all:${userId}`);
+        } catch (e) {
+            console.warn('Redis cache clear error:', e);
+        }
     }
     
     return deleteArticle;
@@ -267,6 +302,13 @@ export const searchArticles = async (query: string, titleOnly: boolean = false, 
  * @returns 不重复的标签字符串数组
  */
 export const queryAllTags = async (userId: string) => {
+    const redis = getRedisClient(serverIncs.redis);
+    const cacheKey = `tags:all:${userId}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
+
     const aiUserId = await getAiUserId();
     // 查询该用户所有未删除文章的 tags 字段
     const rows = await db
@@ -281,7 +323,10 @@ export const queryAllTags = async (userId: string) => {
             row.tags.forEach(tag => tagSet.add(tag));
         }
     });
-    return Array.from(tagSet);
+    
+    const result = Array.from(tagSet);
+    await redis.setex(cacheKey, 3600, JSON.stringify(result));
+    return result;
 };
 
 /**
@@ -299,6 +344,16 @@ export const publishArticleItem = async (id: string, userId: string) => {
         .set({ publishedAt: new Date(), updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
+        
+    try {
+        const redis = getRedisClient(serverIncs.redis);
+        await redis.del("articles:public:list");
+        if (publishedArticle) {
+            await redis.del(`article:detail:${publishedArticle.id}`);
+            if (publishedArticle.slug) await redis.del(`article:detail:${publishedArticle.slug}`);
+        }
+    } catch (e) {}
+
     return publishedArticle;
 };
 
@@ -317,6 +372,16 @@ export const unpublishArticleItem = async (id: string, userId: string) => {
         .set({ publishedAt: null, updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
+        
+    try {
+        const redis = getRedisClient(serverIncs.redis);
+        await redis.del("articles:public:list");
+        if (unpublishedArticle) {
+            await redis.del(`article:detail:${unpublishedArticle.id}`);
+            if (unpublishedArticle.slug) await redis.del(`article:detail:${unpublishedArticle.slug}`);
+        }
+    } catch (e) {}
+
     return unpublishedArticle;
 };
 
@@ -327,11 +392,21 @@ export const unpublishArticleItem = async (id: string, userId: string) => {
  * @returns 公开文章列表数组
  */
 export const queryPublishedArticles = async () => {
+    const redis = getRedisClient(serverIncs.redis);
+    const cacheKey = "articles:public:list";
+
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
+
     const publishedList = await db
         .select()
         .from(articles)
         .where(and(isNull(articles.deleteAt), isNotNull(articles.publishedAt)))
         .orderBy(desc(articles.publishedAt));
+        
+    await redis.setex(cacheKey, 3600, JSON.stringify(publishedList));
     return publishedList;
 };
 
