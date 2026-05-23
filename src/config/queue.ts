@@ -11,4 +11,14 @@ export const queueConfig: QueueConfig = {
             },
         },
     },
+    ARTICLE_TASKS: {
+        redis: "default",
+        defaultJobOptions: {
+            attempts: 3,
+            backoff: {
+                type: "exponential",
+                delay: 2000,
+            },
+        },
+    },
 };

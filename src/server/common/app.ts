@@ -33,6 +33,10 @@ export const beforeServer = async () => {
     serverIncs.redis = createRedisClients();
     serverIncs.queues = createQueues(serverIncs.redis);
     await addUserQueueWorker();
+    
+    // 动态按需加载文章任务 Worker 以避免潜在的循环依赖
+    const { addArticleTaskWorker } = await import("../articles/queue");
+    await addArticleTaskWorker();
 
     // MeiliSearch 初始化：优雅降级，连不上不影响核心功能（登录、验证码等）
     try {

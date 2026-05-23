@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { articles, user } from "@/db/schema";
 import { eq, or, isNull, desc, isNotNull, ilike, and } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
-import { syncArticleSearchDocument, deleteArticleSearchDocument, searchArticlesWithMeili } from "./search/service";
+import { searchArticlesWithMeili } from "./search/service";
+import { addSearchSyncJob, addSearchDeleteJob, addAiSummaryJob } from "./queue";
 
 const getAiUserId = async () => {
     const aiUser = await db.query.user.findFirst({
@@ -124,13 +125,10 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
         .values(insertData)
         .returning();
     
-    // 触发搜索引擎同步 (加入 try-catch 防止搜索服务宕机导致文章无法保存)
+    // 触发搜索引擎同步与 AI 摘要生成 (放入后台队列)
     if (createArticle) {
-        try {
-            await syncArticleSearchDocument(createArticle.id);
-        } catch (e) {
-            console.warn(`[Search Sync Warning] 未能同步文章 ${createArticle.id} 到搜索引擎:`, e);
-        }
+        addSearchSyncJob(createArticle.id).catch(e => console.warn('Queue error:', e));
+        addAiSummaryJob(createArticle.id).catch(e => console.warn('Queue error:', e));
     }
     
     return createArticle;
@@ -153,9 +151,10 @@ export const updateArticleItem = async (id: string, data: UpdateArticleInput, us
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
-    // 触发搜索引擎同步
+    // 触发后台任务队列
     if (updateArticle) {
-        await syncArticleSearchDocument(updateArticle.id);
+        addSearchSyncJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
+        addAiSummaryJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
     }
     
     return updateArticle;
@@ -177,9 +176,9 @@ export const deleteArticleItem = async (id: string, userId: string) => {
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
     
-    // 从搜索引擎彻底移除软删除的文章
+    // 从搜索引擎后台移除软删除的文章
     if (deleteArticle) {
-        await deleteArticleSearchDocument(deleteArticle.id);
+        addSearchDeleteJob(deleteArticle.id).catch(e => console.warn('Queue error:', e));
     }
     
     return deleteArticle;
