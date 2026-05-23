@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "InspireHub - 灵感收集器",
-  description: "在这里捕捉、组织并分享你的每一个灵感瞬时。",
+  title: "创想流 - 极客的数字花园",
+  description: "在这里探索、沉淀并分享您的每一个创想瞬间。",
 };
 
 export default function RootLayout({

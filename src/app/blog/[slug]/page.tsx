@@ -54,9 +54,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <nav className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-xl">
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-xl flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                        </div>
+                        <img src="/website-logo-flat.svg" alt="创想流 Logo" className="w-8 h-8 rounded-xl shadow-sm" />
                         <span className="text-lg font-semibold tracking-tight text-foreground">创想流</span>
                     </Link>
                     <div className="flex items-center gap-4">
