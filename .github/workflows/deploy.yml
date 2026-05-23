@@ -37,6 +37,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 30m
           script: |
             # 进入你服务器部署好的大本营
             cd /opt/idea-flow
