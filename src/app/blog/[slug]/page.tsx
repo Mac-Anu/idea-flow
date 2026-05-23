@@ -34,8 +34,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
+function formatDate(dateInput: string | Date | null): string {
+    if (!dateInput) return "";
+    const d = new Date(dateInput);
     return d.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
 }
 
