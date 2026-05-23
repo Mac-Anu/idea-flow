@@ -1,25 +1,16 @@
-# 🧠 IdeaFlow - AI-Native Knowledge Management System
+# IdeaFlow
 
-![IdeaFlow Banner](https://via.placeholder.com/1200x300/000000/FFFFFF?text=IdeaFlow+-+AI+Native+Blog+%26+Knowledge+Base)
+IdeaFlow 是我个人开发并使用的一套基于 Next.js 15 App Router 构建的现代知识管理系统。
+区别于传统的静态博客，它深度集成了 LangGraph 智能体流与自动化工作流，旨在探索 AI 如何真正介入并增强个人的阅读与写作体验。
 
-> **IdeaFlow** 是一个面向超级个体和内容创作者的**「AI 原生知识管理与沉淀系统」**。它不仅仅是一个博客，更是您大脑的外部数字延伸。集成了极其深度的 AI 能力、企业级搜索引擎以及自动化的工作流生态。
+## 特性
 
-## ✨ 核心亮点 (Key Features)
-
-- 🤖 **深度 AI 赋能 (AI-Native)**
-  - **划词解释与润色**：在阅读或编辑文章时，选中任意文本即可唤起 AI 进行深度解释、翻译或语法润色。
-  - **LangGraph 反思智能体**：内置强大的多轮反思问答 Agent，确保生成的摘要和解答质量超越普通单次对话。
-  - **智能摘要 (TL;DR)**：自动为长文章生成极其精准的核心导读卡片。
-- ⚡ **极致的性能与搜索体验**
-  - **Meilisearch 毫秒级检索**：超越传统 SQL 模糊查询，支持拼写纠错、高亮分词的沉浸式企业级搜索体验。
-  - **Next.js 14/15 App Router**：完全基于最新的 React Server Components 架构，首屏加载极快，SEO 满分。
-- 🎨 **现代化 UI/UX 设计**
-  - 完美支持 **暗色/亮色 (Dark/Light) 双模无缝切换**。
-  - **沉浸式阅读与写作**：左侧全局导航、右侧智能标签云联动、支持目录 (TOC) 跟随。
-  - **Tiptap 富文本编辑器**：支持 Markdown 快捷输入、Mermaid 流程图解析与一键斜杠 `/` 命令唤出工具箱。
-- 🔗 **全栈自动化生态**
-  - 深度接入 **n8n Webhook** 自动化工作流。
-  - 采用 **Better-Auth** 提供极其坚固的身份认证体系和路由级安全中间件防盗刷保护。
+- **AI 智能体交互**: 基于 LangGraph 构建的反思型 Agent。支持在富文本编辑器中划词唤起解释、翻译及润色，并自动生成文章导读 (TL;DR)。
+- **全栈类型安全**: 基于 TypeScript 构建，后端使用 Drizzle/Prisma + Postgres。
+- **全文检索**: 抛弃传统模糊匹配，自建 Meilisearch 引擎实现极速且支持纠错的全文搜索。
+- **现代化编辑器**: 深度定制的 Tiptap Headless 编辑器，支持 Markdown 语法与 `/` 快捷指令。
+- **身份认证与权限**: 采用 Better-Auth，API 路由级鉴权，杜绝接口滥用与盗刷。
+- **自动化工作流**: 预留 Webhook 接口，与 n8n 等自动化平台无缝打通。
 
 ---
 
@@ -84,14 +75,10 @@ pnpm run dev
 
 ---
 
-## 🤝 商业定制与外包接单 (Freelance & Customization)
+## 协议与合作
 
-本项目目前作为个人「超级个体」商业案例持续迭代中。
-**提供基于本套架构的企业级定制开发服务（包括但不限于 AI 知识库搭建、全栈系统定制、自动化工作流改造等）。**
+本项目目前作为个人实践项目持续迭代中。代码暂开源供学习交流使用。
 
-如果您对本项目感兴趣，或者有商业外包开发需求，欢迎联系：
-- 📧 Email: your.email@example.com
-- 💬 Wechat/闲鱼: [在这里留下您的微信号或闲鱼主页链接]
-
----
-*Built with ❤️ and AI.*
+如果您对该架构感兴趣，或有企业级 AI 知识库搭建、自动化工作流改造等商业定制需求，欢迎联系交流：
+- Email: your.email@example.com
+- Wechat/闲鱼: [占位符]
