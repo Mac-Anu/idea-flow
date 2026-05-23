@@ -5,6 +5,7 @@ import { queryPublishedArticles, createArticleItem } from "../articles/service";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import type { Article } from "../articles/type";
 
 /**
  * 检索已发布文章的工具
@@ -19,7 +20,7 @@ export const searchPublishedArticlesTool = tool(
             
             // 简单的内存搜索过滤 (实际项目中会用向量数据库或 Meilisearch)
             const lowerKeyword = keyword.toLowerCase();
-            const matched = articles.filter((a: any) => 
+            const matched = articles.filter((a: Article) => 
                 a.title.toLowerCase().includes(lowerKeyword) || 
                 (a.summary && a.summary.toLowerCase().includes(lowerKeyword)) ||
                 (a.tags && Array.isArray(a.tags) && a.tags.some((t: string) => t.toLowerCase().includes(lowerKeyword)))
@@ -30,7 +31,7 @@ export const searchPublishedArticlesTool = tool(
             }
             
             // 格式化输出供大模型读取
-            return matched.map((a: any) => `标题: ${a.title}\n描述: ${a.summary || '无'}\n标签: ${(a.tags as string[])?.join(', ')}\n发布于: ${a.publishedAt}\n链接: /article/${a.slug}`).join("\n\n---\n\n");
+            return matched.map((a: Article) => `标题: ${a.title}\n描述: ${a.summary || '无'}\n标签: ${(a.tags as string[])?.join(', ')}\n发布于: ${a.publishedAt}\n链接: /article/${a.slug}`).join("\n\n---\n\n");
         } catch (e: any) {
             return `搜索出错: ${e.message}`;
         }
