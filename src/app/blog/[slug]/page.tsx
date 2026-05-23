@@ -7,17 +7,15 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BlogArticleContent } from "./BlogArticleContent";
 import { AISummaryCard } from "@/components/article/AISummaryCard";
 
+import { queryArticleItem } from "@/server/articles/service";
+
 async function getArticle(slug: string) {
-    const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
     try {
-        const res = await fetch(`${baseUrl}/api/articles/${slug}`, {
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return null;
-        const { article } = await res.json();
+        const article = await queryArticleItem(slug);
         if (!article?.publishedAt) return null;
         return article;
-    } catch {
+    } catch (e) {
+        console.error("Failed to query article directly:", e);
         return null;
     }
 }
