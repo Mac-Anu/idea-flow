@@ -4,7 +4,7 @@ import { EmailOTPType } from "./constants";
 
 // 用户登录请求 schema
 export const signInRequestSchema = z.object({
-    username: authConfig.validates.username,
+    username: authConfig.validates.username.or(z.string().email("请输入有效的邮箱或账号")),
     password: authConfig.validates.password,
 });
 
