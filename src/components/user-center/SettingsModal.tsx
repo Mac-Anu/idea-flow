@@ -37,14 +37,21 @@ export const SettingsModal = () => {
 
     const user = session.user;
 
-    const menuItems = [
+    type MenuItem = {
+        id: string;
+        label: string;
+        icon: React.ReactNode | null;
+        locked?: boolean;
+    };
+
+    const menuItems: MenuItem[] = [
         { id: "profile", label: "账号", icon: <User size={16} /> },
         { id: "sessions", label: "设备与安全", icon: <MonitorSmartphone size={16} /> },
         { id: "appearance", label: "偏好设置", icon: <Palette size={16} /> },
         { id: "separator", label: "", icon: null },
         { id: "organization", label: "工作空间", icon: <Users size={16} />, locked: true },
         { id: "billing", label: "订阅方案", icon: <CreditCard size={16} />, locked: true },
-    ] as const;
+    ];
 
     return (
         <AnimatePresence>
