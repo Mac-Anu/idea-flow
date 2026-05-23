@@ -41,7 +41,7 @@ export default async function Home(props: {
                         <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-xl flex items-center justify-center">
                             <Sparkles className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="text-lg font-semibold tracking-tight text-foreground">IdeaFlow</span>
+                        <span className="text-lg font-semibold tracking-tight text-foreground">创想流</span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                         <ThemeToggle />
@@ -218,12 +218,12 @@ export default async function Home(props: {
             <footer className="mt-20 border-t border-border py-12 px-6">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                     <p className="text-sm font-medium text-muted-foreground">
-                        © 2026 IdeaFlow. 探索、思考与沉淀
+                        © 2026 创想流. 探索、思考与沉淀
                     </p>
                     <div className="flex items-center gap-8">
                         <Link href="/articles" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">工作台</Link>
                         <a href="mailto:hello@example.com" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">联系作者</a>
-                        <a href="https://github.com/Bruce-L-J" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">GitHub</a>
+                        <a href="https://github.com/Mac-Anu" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">GitHub</a>
                     </div>
                 </div>
             </footer>

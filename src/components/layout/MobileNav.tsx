@@ -43,7 +43,7 @@ export const MobileNav = ({ articles }: { articles: Article[] }) => {
                         <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-[10px] flex items-center justify-center shadow-sm">
                             <Sparkles className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-semibold text-[16px] text-foreground tracking-tight">IdeaFlow</span>
+                        <span className="font-semibold text-[16px] text-foreground tracking-tight">创想流</span>
                     </div>
                 </div>
             </div>

@@ -68,13 +68,10 @@ ${lastMessage.content}`;
 
 
 /**
- * 条件路由判定 (Conditional Edge Router)
- * 控制状态机流转方向的核心路由：基于审查器节点的评价内容，动态决定是终止流程还是进入下一轮重写循环。
- * 
- * @param state - 携带审查结果的当前工作流状态
- * @returns 目标节点的唯一标识符 ("end" 表示终止，"generate" 表示重写)
+ * 路由 1: 生成器之后的判定
+ * 判断是调用工具，还是进入审查器 (Critic)
  */
-function shouldContinue(state: typeof MessagesAnnotation.State) {
+function shouldToolOrReflect(state: typeof MessagesAnnotation.State) {
     const lastMessage = state.messages[state.messages.length - 1];
     
     // 如果模型决定调用工具，则路由到工具节点
@@ -82,7 +79,18 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
         return "tools";
     }
     
+    // 否则，生成完毕，进入反思审查环节
+    return "reflect";
+}
+
+/**
+ * 路由 2: 审查器之后的判定
+ * 判断是审查通过 (PERFECT) 结束流程，还是打回重写 (generate)
+ */
+function shouldEndOrGenerate(state: typeof MessagesAnnotation.State) {
+    const lastMessage = state.messages[state.messages.length - 1];
     const lastMessageContent = lastMessage.content as string;
+    
     // 若审查评价中包含 "PERFECT" 关键字，则放行输出，流程终止
     if (lastMessageContent.includes("PERFECT")) {
         return "end";
@@ -90,7 +98,6 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
     // 否则驳回，重新流转至生成器节点进行修订
     return "generate";
 }
-
 
 /**
  * 编译构建 LangGraph 业务流
@@ -101,13 +108,15 @@ const workflow = new StateGraph(graphState)
     .addNode("reflect", reflectNode)
     .addNode("tools", new ToolNode(tools))
     .addEdge("__start__", "generate")
-    .addConditionalEdges("generate", shouldContinue, {
-        end: "__end__",
-        generate: "reflect", // 修改为：如果不直接结束，则先反思
-        tools: "tools"
+    .addConditionalEdges("generate", shouldToolOrReflect, {
+        tools: "tools",
+        reflect: "reflect"
     })
-    .addEdge("tools", "generate") // 工具执行完毕后返回生成节点
-    .addEdge("reflect", "generate");
+    .addConditionalEdges("reflect", shouldEndOrGenerate, {
+        end: "__end__",
+        generate: "generate"
+    })
+    .addEdge("tools", "generate");
 
 /**
  * 已编译完成的反思智能体实例

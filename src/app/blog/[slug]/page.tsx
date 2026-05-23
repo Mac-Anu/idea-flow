@@ -23,13 +23,13 @@ async function getArticle(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const article = await getArticle(slug);
-    if (!article) return { title: "文章不存在 - IdeaFlow" };
+    if (!article) return { title: "文章不存在 - 创想流" };
 
     const plainText = article.content?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() || "";
     const description = plainText.slice(0, 160);
 
     return {
-        title: `${article.title} - IdeaFlow`,
+        title: `${article.title} - 创想流`,
         description,
     };
 }
@@ -57,7 +57,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-xl flex items-center justify-center">
                             <Sparkles className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="text-lg font-semibold tracking-tight text-foreground">IdeaFlow</span>
+                        <span className="text-lg font-semibold tracking-tight text-foreground">创想流</span>
                     </Link>
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
@@ -134,7 +134,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         <ArrowLeft className="w-4 h-4" />
                         返回文章列表
                     </Link>
-                    <p className="mt-8 text-xs text-muted-foreground/50">© 2026 IdeaFlow.</p>
+                    <p className="mt-8 text-xs text-muted-foreground/50">© 2026 创想流.</p>
                 </div>
             </footer>
         </div>

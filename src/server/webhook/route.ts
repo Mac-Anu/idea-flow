@@ -85,7 +85,7 @@ webhookApi.post(
                 // 如果不存在 AI 账号，自动创建一个
                 const [newUser] = await db.insert(user).values({
                     id: crypto.randomUUID(),
-                    name: "IdeaFlow AI",
+                    name: "创想流 AI",
                     email: AI_EMAIL,
                     emailVerified: true,
                     image: "https://api.dicebear.com/7.x/bottts/svg?seed=IdeaFlowAI&backgroundColor=b6e3f4"

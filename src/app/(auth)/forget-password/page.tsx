@@ -3,8 +3,8 @@ import { ForgetPasswordForm } from "@/components/auth/forms/forgetPassword";
 import { KeyRound } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "找回密码 - IdeaFlow",
-    description: "通过邮箱验证码重置你的 IdeaFlow 账号密码",
+    title: "找回密码 - 创想流",
+    description: "通过邮箱验证码重置你的 创想流 账号密码",
 };
 
 export default function ForgetPasswordPage() {

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "注册账号 - IdeaFlow",
-    description: "加入 IdeaFlow，开启你的数字花园之旅",
+    title: "注册账号 - 创想流",
+    description: "加入 创想流，开启你的数字花园之旅",
 };
 
 export default function SignUpPage() {

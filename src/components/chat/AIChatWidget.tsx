@@ -81,7 +81,7 @@ export const AIChatWidget = () => {
                                         <Sparkles className="w-4 h-4 text-primary" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-[15px] text-foreground tracking-tight">IdeaFlow AI</h3>
+                                        <h3 className="font-semibold text-[15px] text-foreground tracking-tight">创想流 AI</h3>
                                         <p className="text-[11px] text-muted-foreground">基于 LangGraph 反思工作流</p>
                                     </div>
                                 </div>

@@ -11,7 +11,7 @@ import { adminApi } from "./admin/route";
 import { createErrorResult } from "./common/error";
 
 const app = createHonoApp().basePath("/api");
-app.get("/", (c) => c.text("IdeaFlow API"));
+app.get("/", (c) => c.text("创想流 API"));
 app.notFound((c) => c.json(createErrorResult("路由不存在", null, 404), 404));
 app.onError((err, c) => {
     console.error(`[全局异常] ${err.message}`);
@@ -35,9 +35,9 @@ app.get(
     openAPIRouteHandler(app, {
         documentation: {
             info: {
-                title: "IdeaFlow API",
+                title: "创想流 API",
                 version: "1.0.0",
-                description: "IdeaFlow 项目的后端 API 接口文档",
+                description: "创想流 项目的后端 API 接口文档",
             },
         },
     }),

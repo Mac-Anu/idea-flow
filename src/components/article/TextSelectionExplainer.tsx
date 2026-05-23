@@ -147,7 +147,7 @@ export function TextSelectionExplainer() {
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-gradient-to-r from-blue-500/10 to-indigo-500/10">
                             <div className="flex items-center gap-2 text-indigo-400 font-medium text-sm">
                                 <Sparkles className="w-4 h-4" />
-                                <span>IdeaFlow AI 智能解释</span>
+                                <span>创想流 AI 智能解释</span>
                             </div>
                             <button 
                                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
