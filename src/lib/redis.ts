@@ -31,8 +31,20 @@ export const createRedisClients = () => {
     return clients;
 };
 
-export const getRedisClient = (clients: { [key: string]: Redis }, name?: string) => {
+const globalForRedis = globalThis as unknown as {
+    redisClients: { [key: string]: Redis } | undefined
+};
+
+export const getRedisClient = (clients?: { [key: string]: Redis }, name?: string) => {
+    let activeClients = clients;
+    if (!activeClients || Object.keys(activeClients).length === 0) {
+        if (!globalForRedis.redisClients) {
+            globalForRedis.redisClients = createRedisClients();
+        }
+        activeClients = globalForRedis.redisClients;
+    }
+    
     const cName = name ?? redisConfig.default;
-    if (isNil(clients[cName])) throw new Error(`Redis client "${cName}" not found`);
-    return clients[cName];
+    if (isNil(activeClients[cName])) throw new Error(`Redis client "${cName}" not found`);
+    return activeClients[cName];
 };
