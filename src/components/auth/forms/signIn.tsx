@@ -82,11 +82,11 @@ function FormComponent() {
                         {isPending ? "登录中..." : "立即登录"}
                     </Button>
                     <Button 
-                        disabled
+                        asChild
                         variant="outline"
-                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/30 bg-transparent cursor-not-allowed"
+                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white bg-transparent"
                     >
-                        系统暂不开放注册
+                        <Link href="/sign-up">注册账号</Link>
                     </Button>
                 </div>
             </form>

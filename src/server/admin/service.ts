@@ -65,3 +65,38 @@ export const deleteInvitation = async (id: string) => {
     await db.delete(invitationCode).where(eq(invitationCode.id, id));
     return true;
 };
+
+import { auth } from "@/lib/auth";
+import { sendOTP } from "../user/service";
+
+export const adminSendResetPasswordEmail = async (userId: string) => {
+    const targetUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+    if (!targetUser.length) throw new Error("User not found");
+    
+    // 发送忘记密码类型的OTP
+    await sendOTP(targetUser[0].email, "forget-password");
+    return true;
+};
+
+export const adminForceResetPassword = async (userId: string) => {
+    const targetUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+    if (!targetUser.length) throw new Error("User not found");
+
+    const newPassword = "Idea" + Math.random().toString(36).substring(2, 6) + "!";
+    
+    // 1. 生成一次性OTP
+    const otp = await auth.api.createVerificationOTP({
+        body: { email: targetUser[0].email, type: "forget-password" },
+    });
+    
+    // 2. 直接消耗OTP重置密码
+    await auth.api.resetPasswordEmailOTP({
+        body: {
+            email: targetUser[0].email,
+            otp: otp,
+            password: newPassword
+        }
+    });
+
+    return newPassword;
+};

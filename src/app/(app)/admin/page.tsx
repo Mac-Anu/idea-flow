@@ -145,7 +145,32 @@ export default function AdminDashboardPage() {
                                                     ))}
                                                 </select>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-4 text-right space-x-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        const res = await adminFetchClient.users[":id"]["force-reset-password"].$post({ param: { id: u.id }});
+                                                        if (res.ok) {
+                                                            const json = await res.json();
+                                                            alert(`该用户密码已被强制重置为：\n\n${json.data}\n\n请复制并发送给该用户。`);
+                                                        }
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition"
+                                                    title="强制生成新密码"
+                                                >
+                                                    生成新密码
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if(confirm(`确定要向 ${u.email} 发送密码重置邮件吗？`)) {
+                                                            const res = await adminFetchClient.users[":id"]["reset-password-email"].$post({ param: { id: u.id }});
+                                                            if (res.ok) alert("已发送密码重置验证码到该邮箱！");
+                                                        }
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition"
+                                                    title="发送重置邮件"
+                                                >
+                                                    发重置邮件
+                                                </button>
                                                 <button
                                                     onClick={() => handleBan(u.id, u.banned)}
                                                     className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${u.banned ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : "bg-destructive/10 text-destructive hover:bg-destructive/20"}`}

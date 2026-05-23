@@ -8,7 +8,9 @@ import {
     toggleUserBan,
     getInvitations,
     generateInvitations,
-    deleteInvitation
+    deleteInvitation,
+    adminSendResetPasswordEmail,
+    adminForceResetPassword
 } from "./service";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
@@ -53,4 +55,14 @@ export const adminApi = app
         const id = c.req.param("id");
         await deleteInvitation(id);
         return c.json({ success: true });
+    })
+    .post("/users/:id/reset-password-email", async (c) => {
+        const id = c.req.param("id");
+        await adminSendResetPasswordEmail(id);
+        return c.json({ success: true });
+    })
+    .post("/users/:id/force-reset-password", async (c) => {
+        const id = c.req.param("id");
+        const newPassword = await adminForceResetPassword(id);
+        return c.json({ success: true, data: newPassword });
     });
