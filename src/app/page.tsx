@@ -7,13 +7,15 @@ import { queryPublishedArticles } from "@/server/articles/service";
 import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/article";
 import { ArticleList } from "@/components/home/ArticleList";
 
+import type { Article } from "@/server/articles/type";
+
 export default async function Home(props: {
     searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
     const searchParams = await props.searchParams;
     const tag = typeof searchParams?.tag === 'string' ? searchParams.tag : null;
 
-    let articles: any[] = [];
+    let articles: Article[] = [];
     try {
         articles = await queryPublishedArticles();
     } catch (e) {

@@ -164,7 +164,9 @@ export const SettingsModal = () => {
 
 // --- Sub Panels ---
 
-function ProfilePanel({ user }: { user: any }) {
+type SettingsUser = { name: string; email: string; image?: string | null };
+
+function ProfilePanel({ user }: { user: SettingsUser }) {
     const initial = user.name?.charAt(0).toUpperCase() || "U";
     
     return (
@@ -228,8 +230,10 @@ function ProfilePanel({ user }: { user: any }) {
     );
 }
 
+type SettingsSession = { id: string; userAgent: string; ipAddress: string; updatedAt: Date; token: string };
+
 function SessionsPanel() {
-    const [sessions, setSessions] = useState<any[]>([]);
+    const [sessions, setSessions] = useState<SettingsSession[]>([]);
     const [isPending, setIsPending] = useState(true);
 
     useEffect(() => {

@@ -5,12 +5,16 @@ import { adminFetchClient } from "@/api/admin";
 import { useAbility } from "@/components/auth/rbac";
 import { ShieldAlert, Users, Key, Ban, UserCheck, Plus, Trash2, CheckCircle2 } from "lucide-react";
 
+type AdminUser = { id: string; name: string; email: string; createdAt: string | Date; roleId?: string | null; banned: boolean };
+type AdminRole = { id: string; name: string; label: string };
+type AdminInvite = { id: string; code: string; used: boolean; userEmail?: string | null };
+
 export default function AdminDashboardPage() {
     const ability = useAbility();
     const [activeTab, setActiveTab] = useState<"users" | "invites">("users");
-    const [users, setUsers] = useState<any[]>([]);
-    const [roles, setRoles] = useState<any[]>([]);
-    const [invitations, setInvitations] = useState<any[]>([]);
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [roles, setRoles] = useState<AdminRole[]>([]);
+    const [invitations, setInvitations] = useState<AdminInvite[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {

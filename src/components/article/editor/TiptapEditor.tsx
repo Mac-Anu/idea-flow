@@ -16,7 +16,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
-import { Extension } from "@tiptap/core";
+import { Extension, NodeViewProps } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import "./TiptapEditor.css";
@@ -69,7 +69,7 @@ interface Heading {
 }
 
 // 自定义代码块的 React 渲染组件（右上角带语言选择器）
-function CodeBlockView({ node, updateAttributes, editor }: any) {
+function CodeBlockView({ node, updateAttributes, editor }: NodeViewProps) {
     const language = node.attrs.language || "javascript";
     const code = node.textContent;
     const [svgContent, setSvgContent] = useState<string>("");
@@ -416,7 +416,7 @@ export const TiptapEditor = ({
                     class: "rounded-lg max-w-full h-auto mx-auto my-4 shadow-sm",
                 },
             }),
-            createSearchHighlightExtension() as any,
+            createSearchHighlightExtension(),
             Table.configure({
                 resizable: true,
             }),

@@ -19,15 +19,15 @@ export function BlogArticleContent({ content }: { content: string }) {
     const tocContainerRef = useRef<HTMLDivElement>(null);
     const [headings, setHeadings] = useState<Heading[]>([]);
     const [activeIndex, setActiveIndex] = useState<number>(0);
-    const [editorInstance, setEditorInstance] = useState<any>(null);
+    const [editorInstance, setEditorInstance] = useState<import("@tiptap/react").Editor | null>(null);
 
     // 当大纲变更时更新状态（由 TiptapEditor 的 onHeadingsChange 触发）
-    const handleHeadingsChange = useCallback((newHeadings: any[]) => {
+    const handleHeadingsChange = useCallback((newHeadings: Heading[]) => {
         setHeadings(newHeadings.map((h, i) => ({ ...h, index: i })));
     }, []);
 
     // 获取到编辑器实例
-    const handleEditorReady = useCallback((editor: any) => {
+    const handleEditorReady = useCallback((editor: import("@tiptap/react").Editor) => {
         setEditorInstance(editor);
     }, []);
 

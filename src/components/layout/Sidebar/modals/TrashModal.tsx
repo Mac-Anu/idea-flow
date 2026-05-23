@@ -55,7 +55,7 @@ export const TrashModal = ({ onClose, sidebarRef }: TrashModalProps) => {
         articlesApi.trash().then(async (res) => {
             if (res.ok) {
                 const json = await res.json();
-                setArticles((json as any).data ?? []);
+                setArticles((json as { data: Article[] }).data ?? []);
             }
             setLoading(false);
         });

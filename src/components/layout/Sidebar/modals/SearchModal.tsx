@@ -130,7 +130,7 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                     <div className="flex h-[55vh] min-h-[400px]">
                         {/* 左侧列表 */}
                         <div className="w-[320px] lg:w-[380px] border-r border-border overflow-y-auto p-2 space-y-1">
-                            {results.map((article: any, index: number) => {
+                            {results.map((article: SearchResultArticle, index: number) => {
                                 const isActive = index === activeIndex;
                                 const snippets: string[] = article.snippets || [];
                                 const queryTokens = query.toLowerCase().split(/[\s\p{P}\p{S}]+/u).filter(Boolean);
@@ -185,7 +185,7 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                         {/* 右侧预览 */}
                         <div className="flex-1 overflow-y-auto bg-card/10 p-6 lg:p-8">
                             {results[activeIndex] && (() => {
-                                const activeArticle = results[activeIndex] as any;
+                                const activeArticle = results[activeIndex] as SearchResultArticle;
                                 const snippets: string[] = activeArticle.snippets || [];
                                 const queryTokens = query.toLowerCase().split(/[\s\p{P}\p{S}]+/u).filter(Boolean);
                                 

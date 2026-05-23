@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar, Tag, Clock, ArrowRight, ChevronDown, X } from "lucide-react";
 import { stripHtml, formatDate, estimateReadTime } from "@/lib/article";
+import type { Article } from "@/server/articles/type";
 
 const ARTICLES_PER_PAGE = 6;
 
 interface ArticleListProps {
-    articles: any[];
+    articles: Article[];
     allTags: { name: string; count: number }[];
     activeTag?: string | null;
 }
@@ -97,7 +98,7 @@ export function ArticleList({
             {filteredArticles.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        {displayedArticles.map((article: any) => (
+                        {displayedArticles.map((article: Article) => (
                             <Link
                                 key={article.id}
                                 href={`/blog/${article.slug || article.id}`}
