@@ -52,3 +52,8 @@ antigravity_context.md
 AI功能重构规划书.md
 个人开发者偏好指南.md
 学习资料/
+
+# local test and seed scripts
+test-*.js
+test-*.mjs
+seed-user.*
