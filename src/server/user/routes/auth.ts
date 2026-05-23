@@ -64,13 +64,17 @@ export const authRoutes = app
         zValidator("json", signUpRequestSchema, defaultValidatorErrorHandler),
         async (c) => {
             try {
+                // 临时关闭注册功能，防止外人乱用 Token
+                return c.json(createErrorResult("系统目前暂不开放注册，仅限受邀用户使用。"), 403);
+                
+                /*
                 const { validateType, ...data } = c.req.valid("json");
-                if (validateType !== "email") throw new Error("目前仅支持邮箱注册");
                 const result = await signUpByEmail(data);
                 if (!result.result) {
-                    return c.json(createErrorResult(result.message), 400);
+                    return c.json(createErrorResult((result as any).message), 400);
                 }
                 return c.json(result, 201);
+                */
             } catch (error: any) {
                 return c.json(createErrorResult("注册失败", error), 500);
             }

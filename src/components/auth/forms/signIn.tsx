@@ -18,18 +18,6 @@ function FormComponent() {
     const [isPending, startTransition] = useTransition();
     const searchParams = useSearchParams();
 
-    const signupUrl = useMemo(() => {
-        let url = '/sign-up';
-        const params = new URLSearchParams();
-        searchParams.forEach((value, key) => {
-            params.set(key, value);
-        });
-
-        if (params.toString()) url += `?${params.toString()}`;
-
-        return url;
-    }, [searchParams]);
-
     const onSubmit = (values: SignInRequest) => {
         startTransition(() => {
             submitHandler(values as DeepNonNullable<SignInRequest>);
@@ -94,11 +82,11 @@ function FormComponent() {
                         {isPending ? "登录中..." : "立即登录"}
                     </Button>
                     <Button 
-                        asChild 
+                        disabled
                         variant="outline"
-                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white bg-transparent"
+                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/30 bg-transparent cursor-not-allowed"
                     >
-                        <Link href={signupUrl}>前往注册</Link>
+                        系统暂不开放注册
                     </Button>
                 </div>
             </form>
