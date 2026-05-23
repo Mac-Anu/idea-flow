@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { describeRoute } from "hono-openapi";
-import { createHonoApp } from "../common/app";
+import { createHonoApp, serverIncs } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
 import { reflectionAgent, llm } from "./index";
 import { chatRequestSchema, chatResponseSchema, explainRequestSchema, explainResponseSchema, editorRequestSchema, editorResponseSchema } from "./schema";
