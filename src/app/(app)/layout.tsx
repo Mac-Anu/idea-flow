@@ -3,7 +3,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { articlesApi } from "@/api/articles";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
+import { SettingsModal } from "@/components/user-center/SettingsModal";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
     const headersList = await headers();
     const res = await articlesApi.list({
@@ -29,6 +29,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <main className="relative flex-1 overflow-y-auto bg-background">
                     <div className="h-full w-full px-6 py-8 lg:px-12 lg:py-10">{children}</div>
                 </main>
+                
+                {/* 挂载全局巨型设置弹窗 */}
+                <SettingsModal />
             </div>
         </div>
     );

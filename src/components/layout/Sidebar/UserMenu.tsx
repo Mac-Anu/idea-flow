@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { authClient } from "@/api/auth";
 import { LogOut, Settings, Image as ImageIcon, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { useSettingsStore } from "@/hooks/useSettingsStore";
 export const UserMenu = () => {
     const { data: session, isPending } = authClient.useSession();
     const [isOpen, setIsOpen] = useState(false);
@@ -114,7 +114,7 @@ export const UserMenu = () => {
                             </button>
                             
                             <button 
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => { setIsOpen(false); useSettingsStore.getState().openSettings(); }}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                             >
                                 <Settings size={14} />
