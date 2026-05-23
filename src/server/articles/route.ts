@@ -5,6 +5,7 @@ import { desc, eq, isNull, isNotNull } from "drizzle-orm";
 import { isNil } from "lodash";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { createArticleSchema, updateArticleSchema, publishArticleSchema } from "./schema";
 import { describeRoute } from "hono-openapi";
 import {
@@ -118,6 +119,7 @@ export const articleApi = createHonoApp()
             const data = await c.req.valid("json");
             const userId = c.get("user")!.id;
             const newArticle = await createArticleItem(data, userId);
+            revalidatePath("/", "layout");
             return c.json({ newArticle });
         },
     )
@@ -141,6 +143,7 @@ export const articleApi = createHonoApp()
             const userId = c.get("user")!.id;
             const data = await c.req.valid("json");
             const updateArticle = await updateArticleItem(id, data, userId);
+            revalidatePath("/", "layout");
             return c.json({ updateArticle });
         },
     )
@@ -161,6 +164,7 @@ export const articleApi = createHonoApp()
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
             const deleteArticle = await deleteArticleItem(id, userId);
+            revalidatePath("/", "layout");
             return c.json({ deleteArticle });
         },
     )
@@ -243,6 +247,7 @@ export const articleApi = createHonoApp()
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
             const restoreArticle = await restoreArticleItem(id, userId);
+            revalidatePath("/", "layout");
             return c.json({ restoreArticle });
         },
     )
@@ -267,6 +272,7 @@ export const articleApi = createHonoApp()
             const article = published
                 ? await publishArticleItem(id, userId)
                 : await unpublishArticleItem(id, userId);
+            revalidatePath("/", "layout");
             return c.json({ article });
         },
     );

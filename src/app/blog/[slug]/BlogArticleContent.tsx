@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
+import { TextSelectionExplainer } from "@/components/article/TextSelectionExplainer";
 
 interface Heading {
     level: number;
@@ -123,7 +124,8 @@ export function BlogArticleContent({ content }: { content: string }) {
     return (
         <>
             {/* 使用只读模式的 TiptapEditor，保证渲染和编辑器 100% 一致！ */}
-            <div className="tiptap-readonly-wrapper tiptap">
+            <div className="tiptap-readonly-wrapper tiptap relative">
+                <TextSelectionExplainer />
                 <TiptapEditor 
                     content={content} 
                     readOnly={true} 

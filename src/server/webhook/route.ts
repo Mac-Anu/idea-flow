@@ -13,6 +13,7 @@ export const webhookApi = new Hono();
 const N8nWebhookSchema = z.object({
     title: z.string().min(1, "标题不能为空"),
     content: z.string().min(1, "正文不能为空"),
+    summary: z.string().optional(),
     tags: z.array(z.string()).optional().default(["n8n", "AI翻译"]),
 });
 
@@ -43,7 +44,7 @@ webhookApi.post(
             }
 
             // 2. 获取传递过来的文章数据
-            let { title, content, tags } = c.req.valid("json");
+            let { title, content, summary, tags } = c.req.valid("json");
 
             // 提取 Markdown 中的真实标题
             const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -97,6 +98,7 @@ webhookApi.post(
                 {
                     title,
                     content: htmlContent, // 存入 HTML 格式供富文本编辑器渲染
+                    summary, // n8n 传递过来的 AI 总结
                     tags,
                 },
                 aiUser.id

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Calendar, Tag, Clock, ArrowRight, ChevronDown, X } from "lucide-react";
 import { stripHtml, formatDate, estimateReadTime } from "@/lib/article";
 
@@ -10,13 +11,15 @@ const ARTICLES_PER_PAGE = 6;
 interface ArticleListProps {
     articles: any[];
     allTags: { name: string; count: number }[];
+    activeTag?: string | null;
 }
 
 export function ArticleList({
     articles,
     allTags,
+    activeTag = null,
 }: ArticleListProps) {
-    const [activeTag, setActiveTag] = useState<string | null>(null);
+    const router = useRouter();
     const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
     // 标签筛选
@@ -27,11 +30,11 @@ export function ArticleList({
     const displayedArticles = filteredArticles.slice(0, visibleCount);
     const hasMore = visibleCount < filteredArticles.length;
 
-    const handleTagClick = (tagName: string) => {
-        if (activeTag === tagName) {
-            setActiveTag(null);
+    const handleTagClick = (tagName: string | null) => {
+        if (tagName === null || activeTag === tagName) {
+            router.push('/', { scroll: false });
         } else {
-            setActiveTag(tagName);
+            router.push(`/?tag=${tagName}`, { scroll: false });
         }
         setVisibleCount(ARTICLES_PER_PAGE); // 切换标签时重置分页
     };
@@ -46,7 +49,7 @@ export function ArticleList({
                             <Tag className="w-4 h-4 text-primary" />
                             {activeTag}
                             <button
-                                onClick={() => setActiveTag(null)}
+                                onClick={() => handleTagClick(null)}
                                 className="ml-1 p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <X className="w-3.5 h-3.5" />
@@ -65,7 +68,7 @@ export function ArticleList({
             {allTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                     <button
-                        onClick={() => { setActiveTag(null); setVisibleCount(ARTICLES_PER_PAGE); }}
+                        onClick={() => handleTagClick(null)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
                             activeTag === null
                                 ? "bg-primary text-primary-foreground border-primary shadow-sm"
@@ -130,11 +133,11 @@ export function ArticleList({
                                         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                                             <span className="flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
-                                                {formatDate(article.publishedAt)}
+                                                {formatDate(article.updatedAt)}
                                             </span>
-                                            <span className="flex items-center gap-1">
+                                            <span className="flex items-center gap-1" title="预计阅读时间">
                                                 <Clock className="w-3 h-3" />
-                                                {estimateReadTime(article.content)}min
+                                                {estimateReadTime(article.content)} 分钟
                                             </span>
                                         </div>
                                         <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />

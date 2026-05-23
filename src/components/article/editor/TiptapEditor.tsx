@@ -22,7 +22,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import "./TiptapEditor.css";
 import { useState, useRef, useEffect } from "react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Link as LinkIcon, Copy, Trash2, ExternalLink, ImagePlus } from "lucide-react";
+import { Link as LinkIcon, Copy, Trash2, ExternalLink, ImagePlus, Sparkles, Search, BookOpen, Wand2, PenLine } from "lucide-react";
 import mermaid from "mermaid";
 
 const lowlight = createLowlight(common);
@@ -272,6 +272,9 @@ export const TiptapEditor = ({
     const [linkHref, setLinkHref] = useState("");
     const [linkText, setLinkText] = useState("");
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [isAiMenuOpen, setIsAiMenuOpen] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiExplanation, setAiExplanation] = useState<string | null>(null);
 
     // 我们需要一个 ref 来防止面板内的点击事件让编辑器失去焦点
     const panelRef = useRef<HTMLDivElement>(null);
@@ -447,6 +450,10 @@ export const TiptapEditor = ({
                 if (editor.state.selection.empty && isLinkPanelOpen) {
                     setIsLinkPanelOpen(false);
                 }
+                if (editor.state.selection.empty && isAiMenuOpen) {
+                    setIsAiMenuOpen(false);
+                    setAiExplanation(null);
+                }
             }
         },
     });
@@ -497,6 +504,58 @@ export const TiptapEditor = ({
         if (!editor) return;
         editor.chain().focus().unsetLink().run();
         setIsLinkPanelOpen(false);
+    };
+
+    const handleAiAction = async (action: "tldr" | "polish" | "continue" | "explain") => {
+        if (!editor) return;
+        const { from, to } = editor.state.selection;
+        const text = editor.state.doc.textBetween(from, to, " ");
+        if (!text && action !== "continue") {
+            alert("请先选中一段文字");
+            return;
+        }
+
+        setAiLoading(true);
+        setAiExplanation(null);
+        try {
+            if (action === "explain") {
+                const res = await fetch("/api/agent/explain", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text })
+                });
+                if (!res.ok) throw new Error("AI Request Failed");
+                const data = await res.json();
+                setAiExplanation(data.data.explanation);
+                return;
+            }
+
+            const res = await fetch("/api/agent/editor", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, action })
+            });
+
+            if (!res.ok) throw new Error("AI Request Failed");
+            const data = await res.json();
+            const result = data.data.result;
+
+            editor.chain().focus().run();
+
+            if (action === "polish") {
+                editor.chain().focus().insertContentAt({ from, to }, result).run();
+            } else if (action === "continue") {
+                editor.chain().focus().insertContentAt(to, "\n\n" + result).run();
+            } else if (action === "tldr") {
+                editor.chain().focus().insertContentAt(from, `> **AI 导读**：\n> ${result}\n\n`).run();
+            }
+            setIsAiMenuOpen(false);
+        } catch (error) {
+            alert("AI 处理失败，请稍后重试");
+            setIsAiMenuOpen(false);
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     return (
@@ -566,28 +625,84 @@ export const TiptapEditor = ({
                                 </div>
                             </div>
                         </div>
+                    ) : isAiMenuOpen ? (
+                        <div className="bg-background/80 backdrop-blur-xl border border-primary/30 rounded-2xl shadow-2xl p-2 w-[240px] flex flex-col gap-1 ring-1 ring-white/10" onClick={(e) => e.stopPropagation()}>
+                            {aiLoading ? (
+                                <div className="flex flex-col items-center justify-center p-6 gap-3 text-primary">
+                                    <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                                    <span className="text-xs font-medium animate-pulse text-primary/80">AI 正在施展魔法...</span>
+                                </div>
+                            ) : aiExplanation ? (
+                                <div className="flex flex-col gap-2 p-1">
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            智能解释
+                                        </div>
+                                    </div>
+                                    <div className="text-sm text-foreground/90 leading-relaxed bg-background/50 rounded-xl p-3 border border-border/50 max-h-[250px] overflow-y-auto">
+                                        {aiExplanation}
+                                    </div>
+                                    <button onClick={() => { setIsAiMenuOpen(false); setAiExplanation(null); }} className="text-center px-3 py-2 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors w-full mt-1">
+                                        关闭
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 mb-1">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Ask AI
+                                    </div>
+                                    <button onClick={() => handleAiAction("explain")} className="text-left px-3 py-2.5 text-sm text-foreground hover:bg-primary/15 hover:text-primary rounded-xl transition-all flex items-center gap-3 group">
+                                        <Search className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" /> <span className="font-medium">解释内容</span>
+                                    </button>
+                                    <button onClick={() => handleAiAction("tldr")} className="text-left px-3 py-2.5 text-sm text-foreground hover:bg-primary/15 hover:text-primary rounded-xl transition-all flex items-center gap-3 group">
+                                        <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" /> <span className="font-medium">生成导读</span>
+                                    </button>
+                                    <button onClick={() => handleAiAction("polish")} className="text-left px-3 py-2.5 text-sm text-foreground hover:bg-primary/15 hover:text-primary rounded-xl transition-all flex items-center gap-3 group">
+                                        <Wand2 className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" /> <span className="font-medium">润色修改</span>
+                                    </button>
+                                    <button onClick={() => handleAiAction("continue")} className="text-left px-3 py-2.5 text-sm text-foreground hover:bg-primary/15 hover:text-primary rounded-xl transition-all flex items-center gap-3 group">
+                                        <PenLine className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" /> <span className="font-medium">帮我续写</span>
+                                    </button>
+                                    <div className="h-px bg-border/50 my-1" />
+                                    <button onClick={() => { setIsAiMenuOpen(false); setAiExplanation(null); }} className="text-left px-3 py-2 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors text-center w-full mt-0.5">
+                                        取消
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     ) : (
-                        <div className="bubble-menu flex items-center bg-popover text-popover-foreground border border-border rounded-lg shadow-md p-1 gap-1">
+                        <div className="bubble-menu flex items-center bg-background/80 backdrop-blur-xl border border-primary/20 text-foreground rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-1 ring-white/10 p-1.5 gap-1 relative overflow-hidden before:absolute before:inset-0 before:-z-10 before:bg-gradient-to-r before:from-primary/5 before:to-transparent">
+                            {/* AI 按钮 */}
+                            <button
+                                onClick={() => setIsAiMenuOpen(true)}
+                                className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_15px_rgba(var(--primary),0.4)] transition-all"
+                                title="✨ Ask AI"
+                            >
+                                <Sparkles size={15} className="animate-pulse duration-2000" />
+                            </button>
+                            <div className="w-[1px] h-4 bg-border/60 mx-1" />
                             {/* 基础工具栏 */}
                             <button
                                 onClick={() => editor.chain().focus().toggleBold().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("bold") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
+                                className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-all ${editor.isActive("bold") ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}
                             >
                                 <span className="font-bold text-[14px]">B</span>
                             </button>
                             <button
                                 onClick={() => editor.chain().focus().toggleItalic().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("italic") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
+                                className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-all ${editor.isActive("italic") ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}
                             >
                                 <span className="italic text-[14px]">I</span>
                             </button>
                             <button
                                 onClick={() => editor.chain().focus().toggleStrike().run()}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("strike") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
+                                className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-all ${editor.isActive("strike") ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}
                             >
                                 <span className="line-through text-[14px]">S</span>
                             </button>
-                            <div className="w-px h-4 bg-border mx-1" />
+                            <div className="w-[1px] h-4 bg-border/60 mx-1" />
                             <button
                                 onClick={() => {
                                     const { from, to } = editor.state.selection;
@@ -601,14 +716,14 @@ export const TiptapEditor = ({
                                     );
                                     setIsLinkPanelOpen(true);
                                 }}
-                                className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${editor.isActive("link") || isLinkPanelOpen ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
+                                className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center transition-all ${editor.isActive("link") || isLinkPanelOpen ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}
                             >
                                 <LinkIcon size={14} />
                             </button>
                             <button
                                 onClick={handleImageUploadClick}
                                 disabled={isUploadingImage}
-                                className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors disabled:opacity-50"
+                                className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all disabled:opacity-50"
                                 title="插入图片"
                             >
                                 {isUploadingImage ? (
@@ -619,14 +734,14 @@ export const TiptapEditor = ({
                             </button>
                             {editor.isActive("link") && (
                                 <>
-                                    <div className="w-px h-4 bg-border mx-1" />
+                                    <div className="w-[1px] h-4 bg-border/60 mx-1" />
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(
                                                 editor.getAttributes("link").href,
                                             );
                                         }}
-                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors"
+                                        className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all"
                                         title="复制链接"
                                     >
                                         <Copy size={13} />
@@ -635,7 +750,7 @@ export const TiptapEditor = ({
                                         href={editor.getAttributes("link").href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 transition-colors"
+                                        className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all"
                                         title="访问链接"
                                     >
                                         <ExternalLink size={14} />

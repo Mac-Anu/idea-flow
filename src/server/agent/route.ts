@@ -2,9 +2,10 @@ import { zValidator } from "@hono/zod-validator";
 import { describeRoute } from "hono-openapi";
 import { createHonoApp } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
-import { reflectionAgent } from "./index";
-import { chatRequestSchema, chatResponseSchema } from "./schema";
+import { reflectionAgent, llm } from "./index";
+import { chatRequestSchema, chatResponseSchema, explainRequestSchema, explainResponseSchema, editorRequestSchema, editorResponseSchema } from "./schema";
 import { createSuccessResponse, createServerErrorResponse } from "../common/response";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 export const agentTags = ["AI智能体"];
 export const agentApi = createHonoApp().post(
@@ -52,4 +53,95 @@ export const agentApi = createHonoApp().post(
             return c.json({ message: "AI 生成失败，请检查 API Key 或网络环境" }, 500);
         }
     }
+)
+.post(
+    "/explain",
+    zValidator("json", explainRequestSchema),
+    describeRoute({
+        tags: agentTags,
+        summary: "AI 划词解释",
+        description: "提供文本解释、翻译和术语科普，支持结合上下文进行精准回答",
+        responses: {
+            ...createSuccessResponse(explainResponseSchema),
+            ...createServerErrorResponse("AI 解释失败"),
+        },
+    }),
+    AuthProtectedMiddleware,
+    async (c) => {
+        const { text, context } = await c.req.valid("json");
+
+        try {
+            const systemPrompt = `你是一个专业的阅读助手。你的任务是解释用户选中的文本。
+如果选中文本是外语，请翻译为优雅的中文。
+如果选中文本是专业术语，请用通俗易懂的语言解释。
+如果选中文本是一句长难句，请剖析它的核心意思。
+请保持回答极其简明扼要，直接给出答案，不要多余的寒暄。`;
+
+            const userPrompt = context 
+                ? `选中文本：\n"${text}"\n\n上下文参考：\n"${context}"`
+                : `选中文本：\n"${text}"`;
+
+            const response = await llm.invoke([
+                new SystemMessage(systemPrompt),
+                new HumanMessage(userPrompt)
+            ]);
+
+            return c.json({
+                data: {
+                    explanation: response.content
+                }
+            });
+        } catch (error) {
+            console.error("Agent Explain Error:", error);
+            return c.json({ message: "AI 解释失败，请检查网络" }, 500);
+        }
+    }
+)
+.post(
+    "/editor",
+    zValidator("json", editorRequestSchema),
+    describeRoute({
+        tags: agentTags,
+        summary: "编辑器 AI 助手",
+        description: "提供文章导读、内容润色和智能续写功能",
+        responses: {
+            ...createSuccessResponse(editorResponseSchema),
+            ...createServerErrorResponse("AI 处理失败"),
+        },
+    }),
+    AuthProtectedMiddleware,
+    async (c) => {
+        const { text, action } = await c.req.valid("json");
+
+        try {
+            let systemPrompt = "";
+            let userPrompt = `文本：\n"${text}"`;
+
+            if (action === "tldr") {
+                systemPrompt = `你是一个专业的文章导读助手。请为用户提供的一段文本或全篇文章提取精炼的导读摘要（TL;DR）。
+请使用一段简短流畅的文字，不要超过200字。直接返回摘要，不要包含多余的寒暄。`;
+            } else if (action === "polish") {
+                systemPrompt = `你是一个专业的文字编辑。请对用户提供的文本进行深度润色。
+要求：修正错别字和语病，提升用词专业度和行文流畅性。保留原文的段落结构和核心意思。直接返回润色后的纯文本，不要包含多余的寒暄。`;
+            } else if (action === "continue") {
+                systemPrompt = `你是一个优秀的共创作家。请顺着用户提供的文本内容，自然地续写一段后续内容。
+要求：风格与上文保持一致，逻辑连贯。直接返回续写的新内容，不要重复用户原本提供的文本，也不要寒暄。`;
+            }
+
+            const response = await llm.invoke([
+                new SystemMessage(systemPrompt),
+                new HumanMessage(userPrompt)
+            ]);
+
+            return c.json({
+                data: {
+                    result: response.content
+                }
+            });
+        } catch (error) {
+            console.error("Agent Editor Error:", error);
+            return c.json({ message: "AI 处理失败，请检查网络" }, 500);
+        }
+    }
 );
+

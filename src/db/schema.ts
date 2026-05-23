@@ -6,6 +6,7 @@ export const articles = pgTable("articles", {
     slug: varchar("slug", { length: 255 }).unique(), // 新增的别名（短链接）字段，必须唯一
     title: text("title").notNull(),
     content: text("content").default("").notNull(),
+    summary: text("summary"), // AI 总结字段 (TL;DR)
     imageUrl: text("image_url"),
     tags: text("tags").array(),
     publishedAt: timestamp("published_at"),

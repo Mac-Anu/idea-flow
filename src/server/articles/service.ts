@@ -118,7 +118,7 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
     
     const insertData = data.id
         ? { ...data, slug, userId }
-        : { title: data.title, content: data.content, slug, tags: data.tags, userId };
+        : { title: data.title, content: data.content, summary: data.summary, slug, tags: data.tags, userId };
     const [createArticle] = await db
         .insert(articles)
         .values(insertData)

@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Tag, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, Sparkles, Pencil, Clock } from "lucide-react";
+import { estimateReadTime } from "@/lib/article";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BlogArticleContent } from "./BlogArticleContent";
+import { AISummaryCard } from "@/components/article/AISummaryCard";
 
 async function getArticle(slug: string) {
     const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
@@ -94,13 +96,29 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             {article.title}
                         </h1>
 
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4" />
-                            <span>发布于 {formatDate(article.publishedAt)}</span>
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                                <Calendar className="w-4 h-4" />
+                                <span>发布于 {formatDate(article.publishedAt)}</span>
+                            </div>
+                            {article.updatedAt && (
+                                <div className="flex items-center gap-1.5">
+                                    <Pencil className="w-3.5 h-3.5" />
+                                    <span>编辑于 {formatDate(article.updatedAt)}</span>
+                                </div>
+                            )}
+                            {article.content && (
+                                <div className="flex items-center gap-1.5">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{estimateReadTime(article.content)} 分钟阅读</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-10" />
+
+                    <AISummaryCard summary={article.summary} />
 
                     {/* Rich text body + TOC (client component) */}
                     <BlogArticleContent content={article.content} />

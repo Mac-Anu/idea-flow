@@ -13,7 +13,7 @@ import { ChatOpenAI } from "@langchain/openai";
  * 初始化大语言模型客户端
  * 采用兼容 OpenAI 的标准接口，默认指向 DeepSeek 终端。
  */
-const llm = new ChatOpenAI({
+export const llm = new ChatOpenAI({
     modelName: "deepseek-chat", // 使用深度求索模型
     apiKey: process.env.DEEPSEEK_API_KEY, // 这里用 apiKey
     configuration: {

@@ -7,7 +7,12 @@ import { queryPublishedArticles } from "@/server/articles/service";
 import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/article";
 import { ArticleList } from "@/components/home/ArticleList";
 
-export default async function Home() {
+export default async function Home(props: {
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const searchParams = await props.searchParams;
+    const tag = typeof searchParams?.tag === 'string' ? searchParams.tag : null;
+
     let articles: any[] = [];
     try {
         articles = await queryPublishedArticles();
@@ -21,8 +26,8 @@ export default async function Home() {
     const user = session?.user;
 
     const allTags = collectTags(articles);
-    const featured = articles.length > 0 ? articles[0] : null;
-    const restArticles = articles.slice(1);
+    const featured = !tag && articles.length > 0 ? articles[0] : null;
+    const restArticles = featured ? articles.slice(1) : articles;
 
     // ========== 视图层 ==========
     return (
@@ -128,7 +133,7 @@ export default async function Home() {
                                                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                                     <span className="flex items-center gap-1.5">
                                                         <Calendar className="w-3.5 h-3.5" />
-                                                        {formatDate(featured.publishedAt)}
+                                                        {formatDate(featured.updatedAt)}
                                                     </span>
                                                     <span className="flex items-center gap-1.5">
                                                         <Clock className="w-3.5 h-3.5" />
@@ -148,6 +153,7 @@ export default async function Home() {
                                 <ArticleList
                                     articles={restArticles}
                                     allTags={allTags}
+                                    activeTag={tag}
                                 />
                             </div>
 
@@ -174,14 +180,19 @@ export default async function Home() {
                                         <div className="rounded-[20px] border border-border bg-card p-6">
                                             <h3 className="text-sm font-semibold text-foreground mb-4 tracking-wide">标签</h3>
                                             <div className="flex flex-wrap gap-2">
-                                                {allTags.slice(0, 15).map((tag) => (
-                                                    <span
-                                                        key={tag.name}
-                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-muted/30 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-colors cursor-default"
+                                                {allTags.slice(0, 15).map((t) => (
+                                                    <Link
+                                                        key={t.name}
+                                                        href={tag === t.name ? "/" : `/?tag=${t.name}`}
+                                                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                                                            tag === t.name
+                                                                ? "bg-primary text-primary-foreground border-primary"
+                                                                : "border-border bg-muted/30 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                                                        }`}
                                                     >
-                                                        {tag.name}
-                                                        <span className="text-[10px] opacity-50">({tag.count})</span>
-                                                    </span>
+                                                        {t.name}
+                                                        <span className={`text-[10px] ${tag === t.name ? 'opacity-80' : 'opacity-50'}`}>({t.count})</span>
+                                                    </Link>
                                                 ))}
                                             </div>
                                         </div>

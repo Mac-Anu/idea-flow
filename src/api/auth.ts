@@ -29,18 +29,35 @@ export const authApi = {
         },
     ) => {
         try {
-            return await authClient.signIn.username(
-                {
-                    username: data.username,
-                    password: data.password,
-                    callbackURL: options?.callbackURL,
-                    rememberMe: options?.rememberMe ?? true,
-                },
-                {
-                    onSuccess: options?.onSuccess,
-                    onError: options?.onError,
-                },
-            );
+            const isEmail = data.username.includes("@");
+
+            if (isEmail) {
+                return await authClient.signIn.email(
+                    {
+                        email: data.username,
+                        password: data.password,
+                        callbackURL: options?.callbackURL,
+                        rememberMe: options?.rememberMe ?? true,
+                    },
+                    {
+                        onSuccess: options?.onSuccess,
+                        onError: options?.onError,
+                    },
+                );
+            } else {
+                return await authClient.signIn.username(
+                    {
+                        username: data.username,
+                        password: data.password,
+                        callbackURL: options?.callbackURL,
+                        rememberMe: options?.rememberMe ?? true,
+                    },
+                    {
+                        onSuccess: options?.onSuccess,
+                        onError: options?.onError,
+                    },
+                );
+            }
         } catch (error) {
             if (options?.onError) {
                 options.onError(error);
