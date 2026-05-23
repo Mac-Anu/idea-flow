@@ -193,7 +193,6 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                         <span className="truncate">回收站</span>
                     </button>
                     <SidebarThemeToggle />
-                    <SidebarLink icon={<Settings size={15} />} label="设置" href="#" />
                     {ability?.can('manage', 'all') && (
                         <SidebarLink icon={<ShieldAlert size={15} className="text-destructive" />} label="系统控制台" href="/admin" />
                     )}
