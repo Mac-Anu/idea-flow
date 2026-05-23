@@ -115,6 +115,14 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
+        async (c, next) => {
+            const { RbacContextMiddleware } = await import("../rbac/middleware");
+            return RbacContextMiddleware(c as any, next);
+        },
+        async (c, next) => {
+            const { createPermissionGuard } = await import("../rbac/middleware");
+            return createPermissionGuard({ action: 'create', subject: 'Article' })(c as any, next);
+        },
         async (c) => {
             const data = await c.req.valid("json");
             const userId = c.get("user")!.id;
@@ -138,6 +146,19 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
+        async (c, next) => {
+            const { RbacContextMiddleware } = await import("../rbac/middleware");
+            return RbacContextMiddleware(c as any, next);
+        },
+        async (c, next) => {
+            const { createPermissionGuard } = await import("../rbac/middleware");
+            const { queryArticleId } = await import("./service");
+            return createPermissionGuard({
+                action: 'update',
+                subject: 'Article',
+                getSubject: async (c) => await queryArticleId(c.req.param("id"))
+            })(c as any, next);
+        },
         async (c) => {
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
@@ -160,6 +181,19 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
+        async (c, next) => {
+            const { RbacContextMiddleware } = await import("../rbac/middleware");
+            return RbacContextMiddleware(c as any, next);
+        },
+        async (c, next) => {
+            const { createPermissionGuard } = await import("../rbac/middleware");
+            const { queryArticleId } = await import("./service");
+            return createPermissionGuard({
+                action: 'delete',
+                subject: 'Article',
+                getSubject: async (c) => await queryArticleId(c.req.param("id"))
+            })(c as any, next);
+        },
         async (c) => {
             const id = c.req.param("id");
             const userId = c.get("user")!.id;

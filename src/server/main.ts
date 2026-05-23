@@ -7,6 +7,7 @@ import { authRoutes } from "./user/routes/auth";
 import { tagRoutes } from "./tag/route";
 import { agentApi } from "./agent/route";
 import { webhookApi } from "./webhook/route";
+import { adminApi } from "./admin/route";
 import { createErrorResult } from "./common/error";
 
 const app = createHonoApp().basePath("/api");
@@ -21,7 +22,8 @@ const routes = app
     .route("/tags", tagRoutes)
     .route("/auth", authRoutes)
     .route("/agent", agentApi)
-    .route("/webhook", webhookApi);
+    .route("/webhook", webhookApi)
+    .route("/admin", adminApi);
 
 // Swagger 接口文档
 app.get("/swagger", swaggerUI({ url: "/api/openapi" }));

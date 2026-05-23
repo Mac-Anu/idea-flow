@@ -167,7 +167,7 @@ export function TextSelectionExplainer() {
                             {isLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted-foreground">
                                     <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-                                    <span className="text-xs">DeepSeek 正在思考...</span>
+                                    <span className="text-xs">AI 正在思考...</span>
                                 </div>
                             ) : (
                                 <div className="prose prose-sm dark:prose-invert">

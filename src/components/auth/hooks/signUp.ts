@@ -72,6 +72,7 @@ export const useSignUpForm = () => {
             'otp',
             'password',
             'plainPassword',
+            'invitationCode',
         ]);
         return { ...values, validateType: 'email' } as SignUpFormType;
     }, []);

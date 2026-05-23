@@ -13,6 +13,7 @@ import {
     Sun,
     Moon,
     Bot,
+    ShieldAlert,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { AllArticlesModal } from "./modals/AllArticlesModal";
@@ -24,8 +25,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Article } from "@/server/articles/type";
 import { useSidebar } from "./hooks";
+import { useAbility } from "@/components/auth/rbac";
 
 export const Sidebar = ({ articles }: { articles: Article[] }) => {
+    const ability = useAbility();
     const {
         pathname,
         isAllModalOpen,
@@ -72,20 +75,22 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                     <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Writing Desk</p>
                     <p className="mt-1 text-sm font-medium text-foreground">文章草稿与作品集</p>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleNewArticle}
-                    disabled={isCreating}
-                    className="h-9 w-9 rounded-xl border border-border bg-card/50 text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-                    title="新建页面"
-                >
-                    {isCreating ? (
-                        <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    ) : (
-                        <Plus size={15} />
-                    )}
-                </Button>
+                {ability?.can("create", "Article") && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleNewArticle}
+                        disabled={isCreating}
+                        className="h-9 w-9 rounded-xl border border-border bg-card/50 text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                        title="新建页面"
+                    >
+                        {isCreating ? (
+                            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                            <Plus size={15} />
+                        )}
+                    </Button>
+                )}
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4 pb-4">
@@ -140,14 +145,16 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                                                 <p className="mt-1 text-xs text-muted-foreground/70">
                                                     {isActive ? "当前编辑中" : "点击查看与编辑"}
                                                 </p>
-                                            </div>
-                                            <button
-                                                onClick={(e) => handleDeleteArticle(e, article.id)}
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0 self-center"
-                                                title="移至回收站"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                             </div>
+                                            {ability?.can("delete", { __caslSubjectType__: "Article", userId: article.userId } as any) && (
+                                                <button
+                                                    onClick={(e) => handleDeleteArticle(e, article.id)}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0 self-center"
+                                                    title="移至回收站"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>
@@ -187,6 +194,9 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                     </button>
                     <SidebarThemeToggle />
                     <SidebarLink icon={<Settings size={15} />} label="设置" href="#" />
+                    {ability?.can('manage', 'all') && (
+                        <SidebarLink icon={<ShieldAlert size={15} className="text-destructive" />} label="系统控制台" href="/admin" />
+                    )}
                 </div>
             </div>
         </aside>

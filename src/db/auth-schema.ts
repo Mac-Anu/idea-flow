@@ -14,6 +14,7 @@ export const user = pgTable("user", {
     .notNull(),
   username: text("username").unique(),
   displayUsername: text("display_username"),
+  banned: boolean("banned").default(false).notNull(),
 });
 
 export const session = pgTable(
@@ -75,9 +76,13 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+import { userRoles, userPermissions } from "./rbac-schema";
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  roles: many(userRoles),
+  permissions: many(userPermissions),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -93,3 +98,15 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const invitationCode = pgTable("invitation_code", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  code: text("code").notNull().unique(), // The actual invite code string (e.g. 8-char uppercase)
+  used: boolean("used").default(false).notNull(),
+  usedBy: text("used_by").references(() => user.id, { onDelete: "set null" }), // Which user consumed it
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});

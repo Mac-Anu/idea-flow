@@ -64,17 +64,12 @@ export const authRoutes = app
         zValidator("json", signUpRequestSchema, defaultValidatorErrorHandler),
         async (c) => {
             try {
-                // 临时关闭注册功能，防止外人乱用 Token
-                return c.json(createErrorResult("系统目前暂不开放注册，仅限受邀用户使用。"), 403);
-                
-                /*
                 const { validateType, ...data } = c.req.valid("json");
                 const result = await signUpByEmail(data);
                 if (!result.result) {
                     return c.json(createErrorResult((result as any).message), 400);
                 }
                 return c.json(result, 201);
-                */
             } catch (error: any) {
                 return c.json(createErrorResult("注册失败", error), 500);
             }
@@ -307,9 +302,24 @@ export const authRoutes = app
         async (c) => {
             try {
                 const session = await getCurrentSession(c.req.raw);
+                
+                let userWithRbac = session?.user || null;
+                if (userWithRbac) {
+                    // 动态引入避免循环依赖或在此文件顶部引入均可
+                    const { getRbacPrincipalByUserId } = await import("../../rbac/service");
+                    const rbac = await getRbacPrincipalByUserId(userWithRbac.id);
+                    if (rbac) {
+                        userWithRbac = {
+                            ...userWithRbac,
+                            roles: rbac.roles,
+                            permissions: rbac.permissions,
+                        } as any;
+                    }
+                }
+
                 return c.json(
                     {
-                        user: session?.user || null,
+                        user: userWithRbac,
                         session: session?.session || null,
                     },
                     200,

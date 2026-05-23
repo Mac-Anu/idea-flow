@@ -29,3 +29,4 @@ export const tags = pgTable("tags", {
 });
 
 export * from "./auth-schema";
+export * from "./rbac-schema";

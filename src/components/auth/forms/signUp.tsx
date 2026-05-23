@@ -150,6 +150,27 @@ function FormComponent() {
 
                 <FormField
                     control={form.control}
+                    name="invitationCode"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-sm font-medium text-white/70">
+                                邀请码
+                            </FormLabel>
+                            <FormControl>
+                                <Input
+                                    placeholder="请输入您的专属邀请码"
+                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30 uppercase"
+                                    disabled={form.formState.isSubmitting || isPending}
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage className="text-xs text-red-400" />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
                     name="password"
                     render={({ field }) => (
                         <FormItem>

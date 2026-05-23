@@ -18,6 +18,7 @@
         "@alicloud/openapi-client": "^0.4.15",
         "@alicloud/openapi-core": "^1.0.7",
         "@alicloud/tea-util": "^1.4.11",
+        "@casl/ability": "^7.0.0",
         "@hono/standard-validator": "^0.2.2",
         "@hono/swagger-ui": "^0.6.0",
         "@hono/zod-validator": "^0.7.6",

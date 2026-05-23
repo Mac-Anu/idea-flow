@@ -15,6 +15,19 @@ export const signUpRequestSchema = z.object({
     otp: z.string().length(6, "验证码为6位数字"),
     password: authConfig.validates.password,
     validateType: z.enum(["email", "phone"]),
+    invitationCode: z.string().min(1, "必须填写邀请码"),
+});
+
+const roleSummarySchema = z.object({
+    name: z.string(),
+});
+
+const permissionRuleSchema = z.object({
+    action: z.string(),
+    subject: z.string(),
+    conditions: z.record(z.string(), z.unknown()).nullable().optional(),
+    inverted: z.boolean().optional(),
+    reason: z.string().nullable().optional(),
 });
 
 // 用户信息 schema
@@ -27,6 +40,8 @@ export const userSchema = z.object({
     emailVerified: z.boolean(),
     createdAt: z.string().meta({ description: "用户创建时间" }),
     updatedAt: z.string().meta({ description: "用户更新时间" }),
+    roles: z.array(roleSummarySchema).default([]),
+    permissions: z.array(permissionRuleSchema).default([]),
 });
 
 // 会话信息 schema

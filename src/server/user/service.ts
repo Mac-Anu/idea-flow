@@ -2,7 +2,7 @@ import { isNil } from "lodash";
 import { eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { user } from "@/db/schema";
-import { verification } from "@/db/auth-schema";
+import { verification, invitationCode as invitationCodeTable } from "@/db/auth-schema";
 import { auth } from "@/lib/auth";
 import { authConfig } from "@/config/auth";
 import type { SignUpRequest, ResetPasswordRequest, sendOTPResponse } from "./type";
@@ -90,7 +90,13 @@ export const getUser = async (request: Request) => {
 export const signUpByEmail = async (
     data: Omit<SignUpRequest, "validateType">,
 ): Promise<{ result: false; message: string } | { result: true; user: AuthUser }> => {
-    const { username, email, password, otp } = data;
+    const { username, email, password, otp, invitationCode } = data;
+
+    // 校验邀请码
+    const [invite] = await db.select().from(invitationCodeTable).where(eq(invitationCodeTable.code, invitationCode)).limit(1);
+    if (!invite) return { result: false, message: "邀请码无效" };
+    if (invite.used) return { result: false, message: "该邀请码已被使用" };
+
 
     const existingUserByEmail = await queryUserByEmail(email);
     if (existingUserByEmail) return { result: false, message: "邮箱已被使用" };
@@ -118,10 +124,15 @@ export const signUpByEmail = async (
             await deleteUser(res.user.id);
             return { result: false, message: "验证码错误" };
         } else {
-            await db
-                .update(user)
-                .set({ emailVerified: true })
-                .where(eq(user.email, res.user.email));
+            // 核销邀请码并更新用户状态
+            await db.transaction(async (tx) => {
+                await tx.update(invitationCodeTable)
+                    .set({ used: true, usedBy: res!.user.id })
+                    .where(eq(invitationCodeTable.id, invite.id));
+                await tx.update(user)
+                    .set({ emailVerified: true })
+                    .where(eq(user.email, res!.user.email));
+            });
         }
     } catch (error: any) {
         if (!isNil(res?.user?.id)) await deleteUser(res.user.id);
