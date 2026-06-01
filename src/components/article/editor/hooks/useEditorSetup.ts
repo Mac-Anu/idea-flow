@@ -189,7 +189,7 @@ export function useEditorSetup({
             TableCell,
             GlobalDragHandle.configure({
                 dragHandleSelector: ".custom-drag-handle",
-                dragHandleWidth: 24,
+                dragHandleWidth: 0,
                 scrollTreshold: 100,
             }),
             AutoJoiner,

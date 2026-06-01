@@ -4,7 +4,7 @@ import { Editor } from "@tiptap/react";
 export function DragHandle({ editor }: { editor: Editor | null }) {
     if (!editor) return null;
     return (
-        <div className="custom-drag-handle drag-handle hide relative w-[24px] h-[28px] opacity-0 transition-opacity duration-200 text-muted-foreground">
+        <div className="custom-drag-handle drag-handle hide relative w-0 h-[28px] opacity-0 transition-opacity duration-200 text-muted-foreground">
             <div className="absolute right-2 top-0 flex items-center justify-end gap-1 w-max h-full">
                 <button
                     className="flex items-center justify-center w-6 h-6 rounded-[4px] hover:bg-muted transition-colors cursor-pointer shrink-0"
