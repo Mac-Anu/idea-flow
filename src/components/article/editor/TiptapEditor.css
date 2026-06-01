@@ -295,3 +295,14 @@
     opacity: 1;
 }
 
+/* 块级选中状态 (通过把柄拖拽选中) */
+.tiptap .ProseMirror-selectednode {
+    background-color: rgba(0, 200, 255, 0.15) !important;
+    outline: 2px solid rgba(0, 200, 255, 0.4);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.dark .tiptap .ProseMirror-selectednode {
+    background-color: rgba(0, 200, 255, 0.25) !important;
+}

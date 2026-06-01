@@ -121,6 +121,9 @@
     
     ::selection {
         background: rgba(0, 200, 255, 0.25);
-        color: white;
+    }
+    
+    .dark ::selection {
+        background: rgba(0, 200, 255, 0.4);
     }
 }
