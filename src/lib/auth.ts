@@ -22,6 +22,7 @@ export const createServerAuth = () =>
             enabled: true,
             autoSignIn: false,
         },
+        trustedOrigins: ["http://111.228.49.137", "http://111.228.49.137:3000"],
         basePath: "/api/auth",
         plugins: [
             // 用户名登录插件
