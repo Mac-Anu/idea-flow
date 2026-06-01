@@ -4,7 +4,7 @@ import { Editor } from "@tiptap/react";
 export function DragHandle({ editor }: { editor: Editor | null }) {
     if (!editor) return null;
     return (
-        <div className="custom-drag-handle drag-handle hide flex items-center justify-start gap-1 w-[72px] h-[28px] rounded opacity-0 transition-opacity duration-200 text-muted-foreground pr-6">
+        <div className="custom-drag-handle drag-handle hide flex items-center justify-end gap-1 w-[72px] h-[28px] rounded opacity-0 transition-opacity duration-200 text-muted-foreground pr-2">
             <button
                 className="flex items-center justify-center w-6 h-6 rounded-[4px] hover:bg-muted transition-colors cursor-pointer"
                 title="点击添加区块"
