@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import "./globals.css";
@@ -38,7 +38,7 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-center" />
+          <Toaster position="top-center" richColors />
           <AIChatWidget />
         </ThemeProvider>
       </body>
