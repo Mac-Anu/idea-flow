@@ -32,15 +32,15 @@ function FormComponent() {
                     name="username"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-white/70">账号 / 邮箱</FormLabel>
+                            <FormLabel className="text-sm font-medium text-foreground/70">账号 / 邮箱</FormLabel>
                             <FormControl>
                                 <Input
                                     placeholder="请输入您的用户名或邮箱"
-                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
+                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-400" />
+                            <FormMessage className="text-xs text-destructive" />
                         </FormItem>
                     )}
                 />
@@ -50,16 +50,16 @@ function FormComponent() {
                     name="password"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-sm font-medium text-white/70">密码</FormLabel>
+                            <FormLabel className="text-sm font-medium text-foreground/70">密码</FormLabel>
                             <FormControl>
                                 <Input
                                     type="password"
                                     placeholder="请输入密码"
-                                    className="bg-white/5 border-white/10 focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-white placeholder:text-white/30"
+                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     {...field}
                                 />
                             </FormControl>
-                            <FormMessage className="text-xs text-red-400" />
+                            <FormMessage className="text-xs text-destructive" />
                         </FormItem>
                     )}
                 />
@@ -67,7 +67,7 @@ function FormComponent() {
                 <div className="flex justify-end">
                     <Link
                         href="/forget-password"
-                        className="text-sm text-cyan-400/70 hover:text-cyan-300 transition-colors"
+                        className="text-sm text-cyan-600/70 dark:text-cyan-400/70 hover:text-cyan-300 transition-colors"
                     >
                         忘记密码？
                     </Link>
@@ -77,14 +77,14 @@ function FormComponent() {
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-foreground rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
                     >
                         {isPending ? "登录中..." : "立即登录"}
                     </Button>
                     <Button 
                         asChild
                         variant="outline"
-                        className="w-full rounded-xl h-11 font-medium border-white/10 text-white/70 hover:bg-white/5 hover:text-white bg-transparent"
+                        className="w-full rounded-xl h-11 font-medium border-white/10 text-foreground/70 hover:bg-white/5 hover:text-foreground bg-transparent"
                     >
                         <Link href="/sign-up">注册账号</Link>
                     </Button>

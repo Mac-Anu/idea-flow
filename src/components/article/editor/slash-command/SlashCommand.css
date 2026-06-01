@@ -1,0 +1,11 @@
+.tippy-box[data-theme~='slash-menu'] {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+.tippy-box[data-theme~='slash-menu'] > .tippy-content {
+    padding: 0;
+}
