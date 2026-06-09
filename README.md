@@ -39,7 +39,7 @@ IdeaFlow 是我个人开发并使用的一套基于 Next.js 15 App Router 构建
 
 ### 2. 克隆项目
 ```bash
-git clone https://github.com/YourUsername/idea-flow.git
+git clone https://github.com/Mac-Anu/idea-flow.git
 cd idea-flow
 ```
 
@@ -48,20 +48,26 @@ cd idea-flow
 pnpm install
 ```
 
-### 4. 环境变量配置
-复制一份环境配置文件并填入您自己的配置（包括数据库连接、AI API Key 和 Meilisearch 密钥）：
+### 4. 一键启动依赖服务
+项目依赖 PostgreSQL、Redis 和 Meilisearch，已提供 `docker-compose.yml` 一键拉起：
+```bash
+docker compose up -d
+```
+
+### 5. 环境变量配置
+复制环境配置模板并按需填写（数据库连接、AI API Key、Meilisearch 密钥等）：
 ```bash
 cp .env.example .env
 ```
-> **注意**：请务必配置 `MEILISEARCH_API_KEY` 以及在 `src/server/agent/index.ts` 中配置相应的 AI 服务 Token 以体验完整功能。
+> 默认值已对齐 `docker-compose.yml`，本地开箱即用。如需完整体验 AI 能力，请填入兼容 OpenAI 规范的 `DEEPSEEK_API_KEY`，并确保 `.env` 中的 `MEILISEARCH_API_KEY` 与 compose 里的 `MEILI_MASTER_KEY` 一致。
 
-### 5. 启动开发服务器
+### 6. 初始化数据库与启动
 ```bash
-# 启动前端页面
-pnpm run dev
+# 推送数据库 schema
+pnpm dbp
 
-# 如果您本地有 Meilisearch 实例，请确保它正在运行：
-# ./meilisearch --master-key="YOUR_MASTER_KEY"
+# 启动开发服务器
+pnpm run dev
 ```
 打开浏览器访问 [http://localhost:3000](http://localhost:3000) 即可预览。
 
@@ -77,8 +83,4 @@ pnpm run dev
 
 ## 协议与合作
 
-本项目目前作为个人实践项目持续迭代中。代码暂开源供学习交流使用。
-
-如果您对该架构感兴趣，或有企业级 AI 知识库搭建、自动化工作流改造等商业定制需求，欢迎联系交流：
-- Email: your.email@example.com
-- Wechat/闲鱼: [占位符]
+本项目作为个人实践项目持续迭代中，代码开源供学习交流使用。更多作品见 [GitHub @Mac-Anu](https://github.com/Mac-Anu)。

@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { queryPublishedArticles } from "@/server/articles/service";
 import { stripHtml, formatDate, estimateReadTime, collectTags } from "@/lib/article";
 import { ArticleList } from "@/components/home/ArticleList";
+import { HomeHero } from "@/components/home/HomeHero";
 
 import type { Article } from "@/server/articles/type";
 
@@ -77,20 +78,7 @@ export default async function Home(props: {
             <main className="pt-28 pb-12 px-6">
                 <div className="max-w-6xl mx-auto">
                     {/* Hero */}
-                    <div className="mb-12">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/20 text-primary text-xs font-semibold mb-5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span className="tracking-wide">个人技术博客</span>
-                        </div>
-
-                        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-foreground mb-4 leading-[1.1]">
-                            思考、记录、<span className="text-primary">分享</span>
-                        </h1>
-
-                        <p className="text-base text-muted-foreground max-w-2xl leading-relaxed">
-                            这里记录了我的技术探索、项目复盘与成长思考。每一篇文章都是经过深度打磨的知识沉淀。
-                        </p>
-                    </div>
+                    <HomeHero />
 
                     {articles.length > 0 ? (
                         <div className="flex flex-col lg:flex-row gap-10">
@@ -220,7 +208,7 @@ export default async function Home(props: {
                     </p>
                     <div className="flex items-center gap-8">
                         <Link href="/articles" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">工作台</Link>
-                        <a href="mailto:hello@example.com" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">联系作者</a>
+                        <a href="https://github.com/Mac-Anu" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">关于作者</a>
                         <a href="https://github.com/Mac-Anu" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">GitHub</a>
                     </div>
                 </div>

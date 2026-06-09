@@ -1,0 +1,54 @@
+# ==============================================================================
+# IdeaFlow — 本地依赖服务一键启动
+# 用法：docker compose up -d
+# 启动后将 .env 中的 MEILISEARCH_API_KEY 设为下方 MEILI_MASTER_KEY 的值
+# ==============================================================================
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ideaflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ideaflow
+      POSTGRES_PASSWORD: ideaflow
+      POSTGRES_DB: ideaflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - ideaflow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ideaflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ideaflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ideaflow_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: ideaflow-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: your_meili_master_key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - ideaflow_meili_data:/meili_data
+
+volumes:
+  ideaflow_pg_data:
+  ideaflow_redis_data:
+  ideaflow_meili_data:

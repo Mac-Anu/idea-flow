@@ -3,11 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, type Variants } from "framer-motion";
 import { Calendar, Tag, Clock, ArrowRight, ChevronDown, X } from "lucide-react";
 import { stripHtml, formatDate, estimateReadTime } from "@/lib/article";
 import type { Article } from "@/server/articles/type";
 
 const ARTICLES_PER_PAGE = 6;
+
+// 列表容器：子项依次错开入场
+const listContainer: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.07, delayChildren: 0.05 },
+    },
+};
+
+// 单张卡片：自下方淡入
+const cardItem: Variants = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
 
 interface ArticleListProps {
     articles: Article[];
@@ -97,56 +113,63 @@ export function ArticleList({
             {/* 文章列表 - 紧凑的双列布局 */}
             {filteredArticles.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <motion.div
+                        key={activeTag ?? "all"}
+                        variants={listContainer}
+                        initial="hidden"
+                        animate="show"
+                        className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                    >
                         {displayedArticles.map((article: Article) => (
-                            <Link
-                                key={article.id}
-                                href={`/blog/${article.slug || article.id}`}
-                                className="group"
-                            >
-                                <article className="h-full p-5 rounded-[20px] border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
-                                    {/* Tags */}
-                                    {article.tags && article.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mb-3">
-                                            {article.tags.slice(0, 3).map((tag: string) => (
-                                                <span
-                                                    key={tag}
-                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium"
-                                                >
-                                                    {tag}
+                            <motion.div key={article.id} variants={cardItem} layout>
+                                <Link
+                                    href={`/blog/${article.slug || article.id}`}
+                                    className="group block h-full"
+                                >
+                                    <article className="h-full p-5 rounded-[20px] border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+                                        {/* Tags */}
+                                        {article.tags && article.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mb-3">
+                                                {article.tags.slice(0, 3).map((tag: string) => (
+                                                    <span
+                                                        key={tag}
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium"
+                                                    >
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Title */}
+                                        <h3 className="text-base font-semibold text-card-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                                            {article.title}
+                                        </h3>
+
+                                        {/* Excerpt */}
+                                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4 flex-1">
+                                            {stripHtml(article.content).slice(0, 120)}
+                                        </p>
+
+                                        {/* Footer */}
+                                        <div className="flex items-center justify-between pt-3 border-t border-border/60">
+                                            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" />
+                                                    {formatDate(article.updatedAt)}
                                                 </span>
-                                            ))}
+                                                <span className="flex items-center gap-1" title="预计阅读时间">
+                                                    <Clock className="w-3 h-3" />
+                                                    {estimateReadTime(article.content)} 分钟
+                                                </span>
+                                            </div>
+                                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                                         </div>
-                                    )}
-
-                                    {/* Title */}
-                                    <h3 className="text-base font-semibold text-card-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                                        {article.title}
-                                    </h3>
-
-                                    {/* Excerpt */}
-                                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4 flex-1">
-                                        {stripHtml(article.content).slice(0, 120)}
-                                    </p>
-
-                                    {/* Footer */}
-                                    <div className="flex items-center justify-between pt-3 border-t border-border/60">
-                                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" />
-                                                {formatDate(article.updatedAt)}
-                                            </span>
-                                            <span className="flex items-center gap-1" title="预计阅读时间">
-                                                <Clock className="w-3 h-3" />
-                                                {estimateReadTime(article.content)} 分钟
-                                            </span>
-                                        </div>
-                                        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                                    </div>
-                                </article>
-                            </Link>
+                                    </article>
+                                </Link>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
 
                     {/* 加载更多 */}
                     {hasMore && (
