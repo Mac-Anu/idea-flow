@@ -115,7 +115,7 @@ export function TextSelectionExplainer() {
                         // 这里非常关键：阻止鼠标按下默认行为，防止浏览器取消文字选区
                         onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         onClick={handleExplainClick}
-                        className="fixed z-[9999] flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_0_15px_rgba(79,70,229,0.3)] text-sm font-medium hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] hover:scale-105 transition-all cursor-pointer border border-white/20 backdrop-blur-md"
+                        className="fixed z-[9999] flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[var(--brand-from)] to-[var(--brand-to)] text-white rounded-full shadow-[0_0_15px_oklch(0.7_0.19_40_/_0.3)] text-sm font-medium hover:shadow-[0_0_25px_oklch(0.7_0.19_40_/_0.6)] hover:scale-105 transition-all cursor-pointer border border-white/20 backdrop-blur-md"
                         style={{ 
                             left: `${selection.x}px`, 
                             top: `${selection.y}px`,
@@ -144,8 +144,8 @@ export function TextSelectionExplainer() {
                         }}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-gradient-to-r from-blue-500/10 to-indigo-500/10">
-                            <div className="flex items-center gap-2 text-indigo-400 font-medium text-sm">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-gradient-to-r from-primary/10 to-primary/5">
+                            <div className="flex items-center gap-2 text-primary font-medium text-sm">
                                 <Sparkles className="w-4 h-4" />
                                 <span>创想流 AI 智能解释</span>
                             </div>
@@ -166,7 +166,7 @@ export function TextSelectionExplainer() {
                         <div className="p-4 text-sm leading-relaxed text-foreground max-h-60 overflow-y-auto">
                             {isLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted-foreground">
-                                    <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
                                     <span className="text-xs">AI 正在思考...</span>
                                 </div>
                             ) : (

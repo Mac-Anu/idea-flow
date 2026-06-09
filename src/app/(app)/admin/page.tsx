@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
                                                             if (res.ok) alert("已发送密码重置验证码到该邮箱！");
                                                         }
                                                     }}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition"
                                                     title="发送重置邮件"
                                                 >
                                                     发重置邮件

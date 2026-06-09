@@ -36,69 +36,77 @@
 }
 
 :root {
-    /* 稍微硬朗一点的圆角，增加科技感 */
-    --radius: 0.5rem; 
-    
-    /* === 极简科技感：白天模式 (Light Mode) === */
-    --background: oklch(0.98 0.005 260); /* 极度干净的冷白 */
-    --foreground: oklch(0.15 0.01 260); /* 深邃的文字颜色 */
-    
-    --card: oklch(1 0 0); /* 纯白卡片 */
-    --card-foreground: oklch(0.15 0.01 260);
-    
+    /* 稍微硬朗一点的圆角 */
+    --radius: 0.5rem;
+
+    /* 品牌渐变（珊瑚橙 → 玫红），供 Hero / 按钮 / 强调元素复用 */
+    --brand-from: oklch(0.7 0.19 40);   /* coral orange */
+    --brand-to: oklch(0.65 0.2 5);      /* rose pink */
+
+    /* === 暖调极简：白天模式 (Light Mode) === */
+    --background: oklch(0.99 0.004 60);  /* 带一丝暖意的米白 */
+    --foreground: oklch(0.18 0.01 50);   /* 暖中性深色文字 */
+
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.18 0.01 50);
+
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.15 0.01 260);
-    
-    /* 主色调：克制的深邃科技蓝 */
-    --primary: oklch(0.55 0.15 240);
-    --primary-foreground: oklch(0.98 0 0);
-    
-    --secondary: oklch(0.94 0.01 260);
-    --secondary-foreground: oklch(0.25 0.01 260);
-    
-    --muted: oklch(0.94 0.01 260);
-    --muted-foreground: oklch(0.45 0.01 260);
-    
-    --accent: oklch(0.92 0.02 240);
-    --accent-foreground: oklch(0.15 0.01 260);
-    
-    --destructive: oklch(0.55 0.18 20);
-    
-    --border: oklch(0.88 0.01 260);
-    --input: oklch(0.88 0.01 260);
-    
-    --ring: oklch(0.55 0.15 240);
+    --popover-foreground: oklch(0.18 0.01 50);
+
+    /* 主色调：温暖鲜明的珊瑚橙 */
+    --primary: oklch(0.65 0.18 38);
+    --primary-foreground: oklch(0.99 0.01 60);
+
+    --secondary: oklch(0.95 0.012 60);
+    --secondary-foreground: oklch(0.28 0.01 50);
+
+    --muted: oklch(0.95 0.012 60);
+    --muted-foreground: oklch(0.48 0.012 50);
+
+    --accent: oklch(0.94 0.04 45);
+    --accent-foreground: oklch(0.18 0.01 50);
+
+    --destructive: oklch(0.58 0.2 25);
+
+    --border: oklch(0.9 0.01 55);
+    --input: oklch(0.9 0.01 55);
+
+    --ring: oklch(0.65 0.18 38);
 }
 
 .dark {
-    /* === 极简科技感：夜间模式 (Dark Mode) === */
-    --background: oklch(0.15 0.01 260); 
-    --foreground: oklch(0.95 0.01 260);
-    
-    --card: oklch(0.18 0.01 260);
-    --card-foreground: oklch(0.95 0.01 260);
-    
-    --popover: oklch(0.18 0.01 260);
-    --popover-foreground: oklch(0.95 0.01 260);
-    
-    --primary: oklch(0.75 0.15 240);
-    --primary-foreground: oklch(0.15 0.01 260);
-    
-    --secondary: oklch(0.22 0.01 260);
-    --secondary-foreground: oklch(0.95 0.01 260);
-    
-    --muted: oklch(0.22 0.01 260);
-    --muted-foreground: oklch(0.65 0.01 260);
-    
-    --accent: oklch(0.25 0.02 240);
-    --accent-foreground: oklch(0.95 0.01 260);
-    
-    --destructive: oklch(0.55 0.18 20);
-    
-    --border: oklch(0.25 0.01 260);
-    --input: oklch(0.25 0.01 260);
-    
-    --ring: oklch(0.75 0.15 240);
+    /* 品牌渐变（暗色下略微提亮以保持鲜活） */
+    --brand-from: oklch(0.74 0.18 42);
+    --brand-to: oklch(0.68 0.2 8);
+
+    /* === 暖调极简：夜间模式 (Dark Mode) === */
+    --background: oklch(0.16 0.008 50);
+    --foreground: oklch(0.96 0.008 60);
+
+    --card: oklch(0.19 0.008 50);
+    --card-foreground: oklch(0.96 0.008 60);
+
+    --popover: oklch(0.19 0.008 50);
+    --popover-foreground: oklch(0.96 0.008 60);
+
+    --primary: oklch(0.72 0.17 42);
+    --primary-foreground: oklch(0.16 0.01 50);
+
+    --secondary: oklch(0.24 0.01 50);
+    --secondary-foreground: oklch(0.96 0.008 60);
+
+    --muted: oklch(0.24 0.01 50);
+    --muted-foreground: oklch(0.68 0.012 55);
+
+    --accent: oklch(0.28 0.04 45);
+    --accent-foreground: oklch(0.96 0.008 60);
+
+    --destructive: oklch(0.6 0.2 25);
+
+    --border: oklch(0.27 0.01 50);
+    --input: oklch(0.27 0.01 50);
+
+    --ring: oklch(0.72 0.17 42);
 }
 
 @layer base {
@@ -112,18 +120,90 @@
         @apply bg-background text-foreground antialiased transition-colors duration-300;
         background-attachment: fixed;
     }
-    
+
+    /* 白天模式：顶部投下一抹暖色光晕 */
+    body {
+        background-image:
+            radial-gradient(ellipse 70% 45% at 50% -15%, oklch(0.7 0.19 40 / 0.07), transparent 75%);
+    }
+
     .dark body {
-        /* 仅在夜间模式下投下科技光晕 */
-        background-image: 
-            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 200, 255, 0.12), transparent 80%);
+        /* 夜间模式：更浓郁的暖色科技光晕 */
+        background-image:
+            radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.7 0.19 40 / 0.14), transparent 80%);
     }
-    
+
     ::selection {
-        background: rgba(0, 200, 255, 0.25);
+        background: oklch(0.7 0.19 40 / 0.25);
     }
-    
+
     .dark ::selection {
-        background: rgba(0, 200, 255, 0.4);
+        background: oklch(0.7 0.19 40 / 0.4);
+    }
+}
+
+/* ============================================================
+   Hero 动态背景：缓慢浮动的品牌色光晕 + 透视细网格
+   ============================================================ */
+.hero-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(64px);
+    opacity: 0.55;
+    will-change: transform;
+}
+
+.hero-glow-1 {
+    width: 32rem;
+    height: 32rem;
+    top: -8rem;
+    left: -4rem;
+    background: radial-gradient(circle at center, var(--brand-from), transparent 70%);
+    animation: hero-float-1 14s ease-in-out infinite;
+}
+
+.hero-glow-2 {
+    width: 26rem;
+    height: 26rem;
+    top: -4rem;
+    right: -2rem;
+    background: radial-gradient(circle at center, var(--brand-to), transparent 70%);
+    animation: hero-float-2 18s ease-in-out infinite;
+}
+
+.dark .hero-glow {
+    opacity: 0.4;
+}
+
+/* 透视细网格：随主题用 currentColor 透明度自适应明暗 */
+.hero-grid {
+    background-image:
+        linear-gradient(to right, oklch(0.5 0.05 45 / 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, oklch(0.5 0.05 45 / 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 60% 70% at 30% 0%, black, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 70% at 30% 0%, black, transparent 75%);
+}
+
+.dark .hero-grid {
+    background-image:
+        linear-gradient(to right, oklch(0.8 0.05 45 / 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, oklch(0.8 0.05 45 / 0.05) 1px, transparent 1px);
+}
+
+@keyframes hero-float-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(2.5rem, 1.5rem) scale(1.08); }
+}
+
+@keyframes hero-float-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-2rem, 1rem) scale(1.05); }
+}
+
+/* 尊重用户的「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+    .hero-glow {
+        animation: none;
     }
 }

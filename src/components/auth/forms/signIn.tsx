@@ -36,7 +36,7 @@ function FormComponent() {
                             <FormControl>
                                 <Input
                                     placeholder="请输入您的用户名或邮箱"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     {...field}
                                 />
                             </FormControl>
@@ -55,7 +55,7 @@ function FormComponent() {
                                 <Input
                                     type="password"
                                     placeholder="请输入密码"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     {...field}
                                 />
                             </FormControl>
@@ -67,7 +67,7 @@ function FormComponent() {
                 <div className="flex justify-end">
                     <Link
                         href="/forget-password"
-                        className="text-sm text-cyan-600/70 dark:text-cyan-400/70 hover:text-cyan-300 transition-colors"
+                        className="text-sm text-primary/70 hover:text-primary transition-colors"
                     >
                         忘记密码？
                     </Link>
@@ -77,7 +77,7 @@ function FormComponent() {
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-foreground rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
+                        className="w-full bg-primary hover:brightness-110 text-primary-foreground rounded-xl shadow-[0_4px_20px_oklch(0.7_0.19_40_/_0.3)] h-11 font-medium transition-all"
                     >
                         {isPending ? "登录中..." : "立即登录"}
                     </Button>

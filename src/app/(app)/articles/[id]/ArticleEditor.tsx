@@ -107,7 +107,7 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                             className={cn(
                                 "flex w-[110px] items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
                                 "border-primary/20 bg-primary/10 text-primary",
-                                "hover:bg-primary/20 hover:shadow-[0_4px_16px_rgba(0,200,255,0.15)]",
+                                "hover:bg-primary/20 hover:shadow-[0_4px_16px_oklch(0.7_0.19_40_/_0.15)]",
                                 isPublishing && "opacity-50 cursor-not-allowed",
                             )}
                             title="发布到公开博客"

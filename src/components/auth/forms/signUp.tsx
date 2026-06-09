@@ -83,7 +83,7 @@ function FormComponent() {
                             <FormControl>
                                 <Input
                                     placeholder="起个好听的名字（至少 3 位）"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
@@ -105,7 +105,7 @@ function FormComponent() {
                                 <Input
                                     type="email"
                                     placeholder="your@email.com"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
@@ -128,7 +128,7 @@ function FormComponent() {
                                     <Input
                                         placeholder="6位数字验证码"
                                         maxLength={6}
-                                        className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30 flex-1"
+                                        className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30 flex-1"
                                         disabled={form.formState.isSubmitting || isPending}
                                         {...field}
                                     />
@@ -159,7 +159,7 @@ function FormComponent() {
                             <FormControl>
                                 <Input
                                     placeholder="请输入您的专属邀请码"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30 uppercase"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30 uppercase"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
@@ -181,7 +181,7 @@ function FormComponent() {
                                 <Input
                                     type="password"
                                     placeholder="请输入密码（至少 6 位）"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
@@ -203,7 +203,7 @@ function FormComponent() {
                                 <Input
                                     type="password"
                                     placeholder="请再次输入密码"
-                                    className="bg-background border-border focus-visible:ring-cyan-500/50 focus-visible:border-cyan-400/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
+                                    className="bg-background border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-11 text-foreground placeholder:text-foreground/30"
                                     disabled={form.formState.isSubmitting || isPending}
                                     {...field}
                                 />
@@ -217,7 +217,7 @@ function FormComponent() {
                     <Button
                         type="submit"
                         disabled={form.formState.isSubmitting || isPending}
-                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-foreground rounded-xl shadow-[0_4px_20px_rgba(0,200,255,0.3)] h-11 font-medium transition-all"
+                        className="w-full bg-primary hover:brightness-110 text-primary-foreground rounded-xl shadow-[0_4px_20px_oklch(0.7_0.19_40_/_0.3)] h-11 font-medium transition-all"
                     >
                         {(form.formState.isSubmitting || isPending) ? "注册中..." : "立即注册"}
                     </Button>

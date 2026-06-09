@@ -13,8 +13,8 @@ export default function SignInPage() {
         <div className="w-full max-w-sm">
             {/* Logo */}
             <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/50 backdrop-blur-sm border border-border shadow-[0_8px_24px_rgba(0,200,255,0.15)] mb-5">
-                    <Sparkles className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/50 backdrop-blur-sm border border-border shadow-[0_8px_24px_oklch(0.7_0.19_40_/_0.15)] mb-5">
+                    <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                     欢迎回来
@@ -32,7 +32,7 @@ export default function SignInPage() {
                     <span className="text-muted-foreground">还没有账号？</span>{" "}
                     <Link
                         href="/sign-up"
-                        className="font-semibold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
+                        className="font-semibold text-primary hover:brightness-110 transition-colors"
                     >
                         免费注册
                     </Link>

@@ -4,12 +4,12 @@
   
   <!-- 创想流：三条交织的纯色数据流 (纯正扁平化，无任何渐变和 AI 光影) -->
   
-  <!-- 底层深海蓝数据流 -->
-  <path d="M 40 140 C 90 140, 110 60, 160 60" fill="none" stroke="#2563eb" stroke-width="22" stroke-linecap="round" />
-  
-  <!-- 中层天蓝数据流 -->
-  <path d="M 40 100 C 90 100, 110 100, 160 100" fill="none" stroke="#0ea5e9" stroke-width="22" stroke-linecap="round" />
-  
-  <!-- 表层亮青色 (Cyan) 数据流，象征迸发的灵感 -->
-  <path d="M 40 60 C 90 60, 110 140, 160 140" fill="none" stroke="#00c8ff" stroke-width="22" stroke-linecap="round" />
+  <!-- 底层暖橙数据流 -->
+  <path d="M 40 140 C 90 140, 110 60, 160 60" fill="none" stroke="#f97316" stroke-width="22" stroke-linecap="round" />
+
+  <!-- 中层浅橙数据流 -->
+  <path d="M 40 100 C 90 100, 110 100, 160 100" fill="none" stroke="#fb923c" stroke-width="22" stroke-linecap="round" />
+
+  <!-- 表层玫红数据流，象征迸发的灵感 -->
+  <path d="M 40 60 C 90 60, 110 140, 160 140" fill="none" stroke="#ec4899" stroke-width="22" stroke-linecap="round" />
 </svg>
