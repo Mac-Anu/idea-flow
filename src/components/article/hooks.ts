@@ -15,6 +15,8 @@ export const useArticleEditor = (article: Article) => {
     const [saved, setSaved] = useState(false);
     const [isPublished, setIsPublished] = useState(!!article.publishedAt);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [isPinned, setIsPinned] = useState(!!article.isPinned);
+    const [isPinning, setIsPinning] = useState(false);
     const [headings, setHeadings] = useState<{ level: number; text: string; pos: number }[]>([]);
     const titleRef = useRef<HTMLInputElement>(null);
     const contentRef = useRef<HTMLTextAreaElement>(null);
@@ -175,12 +177,33 @@ export const useArticleEditor = (article: Article) => {
             });
             if (res.ok) {
                 setIsPublished(false);
+                setIsPinned(false); // 取消发布会一并取消置顶
                 router.refresh();
             }
         } catch (error) {
             console.error("取消发布失败:", error);
         } finally {
             setIsPublishing(false);
+        }
+    };
+
+    // 置顶 / 取消置顶
+    const handleTogglePin = async () => {
+        const next = !isPinned;
+        setIsPinning(true);
+        try {
+            const res = await client.api.articles[":id"].pin.$patch({
+                param: { id: article.id },
+                json: { pinned: next },
+            });
+            if (res.ok) {
+                setIsPinned(next);
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("置顶操作失败:", error);
+        } finally {
+            setIsPinning(false);
         }
     };
 
@@ -192,6 +215,8 @@ export const useArticleEditor = (article: Article) => {
         saved,
         isPublished,
         isPublishing,
+        isPinned,
+        isPinning,
         headings,
         editor,
         titleRef,
@@ -207,6 +232,7 @@ export const useArticleEditor = (article: Article) => {
         handleDelete,
         handlePublish,
         handleUnpublish,
+        handleTogglePin,
     };
 };
 

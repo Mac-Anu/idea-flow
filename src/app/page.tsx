@@ -91,12 +91,12 @@ export default async function Home(props: {
                                             <div className="absolute top-6 right-6">
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
                                                     <Sparkles className="w-3 h-3" />
-                                                    最新发布
+                                                    {featured.isPinned ? "置顶" : "最新发布"}
                                                 </span>
                                             </div>
 
                                             {featured.tags && featured.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                <div className="flex flex-wrap gap-2 mb-4 pr-24 sm:pr-28">
                                                     {featured.tags.slice(0, 4).map((tag: string) => (
                                                         <span
                                                             key={tag}
@@ -109,7 +109,7 @@ export default async function Home(props: {
                                                 </div>
                                             )}
 
-                                            <h2 className="text-2xl md:text-3xl font-bold text-card-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
+                                            <h2 className="text-2xl md:text-3xl font-bold text-card-foreground mb-4 group-hover:text-primary transition-colors leading-tight pr-24 sm:pr-28">
                                                 {featured.title}
                                             </h2>
 

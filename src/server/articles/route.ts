@@ -6,7 +6,7 @@ import { isNil } from "lodash";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createArticleSchema, updateArticleSchema, publishArticleSchema } from "./schema";
+import { createArticleSchema, updateArticleSchema, publishArticleSchema, pinArticleSchema } from "./schema";
 import { describeRoute } from "hono-openapi";
 import {
     create201SuccessResponse,
@@ -29,6 +29,7 @@ import {
     queryAllTags,
     publishArticleItem,
     unpublishArticleItem,
+    pinArticleItem,
     queryPublishedArticles,
 } from "./service";
 import { createHonoApp } from "../common/app";
@@ -306,6 +307,42 @@ export const articleApi = createHonoApp()
             const article = published
                 ? await publishArticleItem(id, userId)
                 : await unpublishArticleItem(id, userId);
+            revalidatePath("/", "layout");
+            return c.json({ article });
+        },
+    )
+    .patch(
+        "/:id/pin",
+        zValidator("json", pinArticleSchema),
+        describeRoute({
+            tags: articleTags,
+            summary: "置顶/取消置顶文章",
+            description: "将已发布文章置顶到公开博客精选位，或取消置顶",
+            responses: {
+                ...createSuccessResponse(createArticleSchema),
+                ...createNotFoundErrorResponse("文章不存在"),
+                ...createServerErrorResponse("置顶操作失败"),
+            },
+        }),
+        AuthProtectedMiddleware,
+        async (c, next) => {
+            const { RbacContextMiddleware } = await import("../rbac/middleware");
+            return RbacContextMiddleware(c as any, next);
+        },
+        async (c, next) => {
+            const { createPermissionGuard } = await import("../rbac/middleware");
+            const { queryArticleId } = await import("./service");
+            return createPermissionGuard({
+                action: 'update',
+                subject: 'Article',
+                getSubject: async (c) => await queryArticleId(c.req.param("id"))
+            })(c as any, next);
+        },
+        async (c) => {
+            const id = c.req.param("id");
+            const userId = c.get("user")!.id;
+            const { pinned } = await c.req.valid("json");
+            const article = await pinArticleItem(id, pinned, userId);
             revalidatePath("/", "layout");
             return c.json({ article });
         },

@@ -17,31 +17,73 @@ const getAiUserId = async () => {
 };
 
 /**
+ * 判断字符串是否为合法的 UUID 格式
+ * 用于区分传入的标识是文章 ID(UUID) 还是 slug(别名)
+ */
+const isUuid = (value: string): boolean =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+/**
+ * 统一清除一篇文章的所有相关缓存
+ * 写操作（更新/删除/发布/取消发布/置顶）后调用，避免脏数据导致页面不更新或 404
+ *
+ * @param article - 受影响的文章记录（至少包含 id，可选 slug）
+ * @param userId - 文章所属用户 ID（用于清该用户的标签缓存）
+ * @param oldSlug - 若本次操作改动了 slug，传入旧 slug 一并清除其详情缓存
+ */
+const invalidateArticleCache = async (
+    article: { id: string; slug?: string | null },
+    userId?: string,
+    oldSlug?: string | null,
+) => {
+    try {
+        const redis = getRedisClient(serverIncs.redis);
+        const keys = [
+            "articles:public:list",                 // 公开列表缓存（无条件清，草稿/置顶变动都影响它）
+            `article:detail:${article.id}`,          // 按 id 访问的详情缓存
+        ];
+        if (article.slug) keys.push(`article:detail:${article.slug}`);   // 新 slug 详情缓存
+        if (oldSlug && oldSlug !== article.slug) keys.push(`article:detail:${oldSlug}`); // 旧 slug 详情缓存
+        if (userId) keys.push(`tags:all:${userId}`);  // 该用户标签缓存
+        await redis.del(...keys);
+    } catch (e) {
+        console.warn("Redis cache clear error:", e);
+    }
+};
+
+/**
  * 复合查询单篇文章
  * 尝试通过文章 ID 或 Slug 进行精确匹配
- * 
+ *
  * @param arg - 文章的 UUID 或别名 (slug)
  * @returns 匹配的文章实体，若未找到则返回 null
  */
 export const queryArticleItem = async (arg: string) => {
     const redis = getRedisClient(serverIncs.redis);
     const cacheKey = `article:detail:${arg}`;
-    
+
     // 优先查缓存
     const cached = await redis.get(cacheKey);
     if (cached) {
         return JSON.parse(cached);
     }
 
+    // 关键：id 列是 UUID 类型，若 arg 不是合法 UUID 就拿去比 id，
+    // Postgres 会直接抛 "invalid input syntax for type uuid" 错误。
+    // 因此只有 arg 是 UUID 时才匹配 id，否则只按 slug 查。
+    const condition = isUuid(arg)
+        ? or(eq(articles.id, arg), eq(articles.slug, arg))
+        : eq(articles.slug, arg);
+
     const [item] = await db
         .select()
         .from(articles)
-        .where(or(eq(articles.id, arg), eq(articles.slug, arg)));
-        
+        .where(condition);
+
     if (isNil(item)) {
         return null;
     }
-    
+
     // 写入缓存，过期时间 1 小时
     await redis.setex(cacheKey, 3600, JSON.stringify(item));
     return item;
@@ -160,28 +202,21 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
  */
 export const updateArticleItem = async (id: string, data: UpdateArticleInput, userId: string) => {
     const aiUserId = await getAiUserId();
+    // 先取旧记录，拿到旧 slug，以便 slug 改变时连旧 slug 的缓存一并清除
+    const oldArticle = await queryArticleId(id);
     const [updateArticle] = await db
         .update(articles)
         .set({ ...data, updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
-    
+
     // 触发后台任务队列和缓存清理
     if (updateArticle) {
         addSearchSyncJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
         addAiSummaryJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
-        
-        try {
-            const redis = getRedisClient(serverIncs.redis);
-            await redis.del(`article:detail:${updateArticle.id}`);
-            if (updateArticle.slug) await redis.del(`article:detail:${updateArticle.slug}`);
-            if (updateArticle.publishedAt) await redis.del("articles:public:list");
-            await redis.del(`tags:all:${userId}`);
-        } catch (e) {
-            console.warn('Redis cache clear error:', e);
-        }
+        await invalidateArticleCache(updateArticle, userId, oldArticle?.slug);
     }
-    
+
     return updateArticle;
 };
 
@@ -204,18 +239,9 @@ export const deleteArticleItem = async (id: string, userId: string) => {
     // 从搜索引擎后台移除软删除的文章并清理缓存
     if (deleteArticle) {
         addSearchDeleteJob(deleteArticle.id).catch(e => console.warn('Queue error:', e));
-        
-        try {
-            const redis = getRedisClient(serverIncs.redis);
-            await redis.del(`article:detail:${deleteArticle.id}`);
-            if (deleteArticle.slug) await redis.del(`article:detail:${deleteArticle.slug}`);
-            if (deleteArticle.publishedAt) await redis.del("articles:public:list");
-            await redis.del(`tags:all:${userId}`);
-        } catch (e) {
-            console.warn('Redis cache clear error:', e);
-        }
+        await invalidateArticleCache(deleteArticle, userId);
     }
-    
+
     return deleteArticle;
 };
 
@@ -344,15 +370,10 @@ export const publishArticleItem = async (id: string, userId: string) => {
         .set({ publishedAt: new Date(), updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
-        
-    try {
-        const redis = getRedisClient(serverIncs.redis);
-        await redis.del("articles:public:list");
-        if (publishedArticle) {
-            await redis.del(`article:detail:${publishedArticle.id}`);
-            if (publishedArticle.slug) await redis.del(`article:detail:${publishedArticle.slug}`);
-        }
-    } catch (e) {}
+
+    if (publishedArticle) {
+        await invalidateArticleCache(publishedArticle, userId);
+    }
 
     return publishedArticle;
 };
@@ -360,7 +381,8 @@ export const publishArticleItem = async (id: string, userId: string) => {
 /**
  * 取消发布文章
  * 清除 publishedAt 时间戳，将文章恢复为私有草稿
- * 
+ * 同时取消置顶（草稿不应继续占据公开精选位）
+ *
  * @param id - 目标文章 ID
  * @param userId - 当前操作用户的 ID (鉴权用)
  * @returns 更新后的文章记录
@@ -369,20 +391,39 @@ export const unpublishArticleItem = async (id: string, userId: string) => {
     const aiUserId = await getAiUserId();
     const [unpublishedArticle] = await db
         .update(articles)
-        .set({ publishedAt: null, updatedAt: new Date() })
+        .set({ publishedAt: null, isPinned: false, updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
-        
-    try {
-        const redis = getRedisClient(serverIncs.redis);
-        await redis.del("articles:public:list");
-        if (unpublishedArticle) {
-            await redis.del(`article:detail:${unpublishedArticle.id}`);
-            if (unpublishedArticle.slug) await redis.del(`article:detail:${unpublishedArticle.slug}`);
-        }
-    } catch (e) {}
+
+    if (unpublishedArticle) {
+        await invalidateArticleCache(unpublishedArticle, userId);
+    }
 
     return unpublishedArticle;
+};
+
+/**
+ * 置顶 / 取消置顶文章
+ * 置顶的已发布文章会优先出现在公开博客的精选位
+ *
+ * @param id - 目标文章 ID
+ * @param pinned - true 置顶，false 取消置顶
+ * @param userId - 当前操作用户的 ID (鉴权用)
+ * @returns 更新后的文章记录
+ */
+export const pinArticleItem = async (id: string, pinned: boolean, userId: string) => {
+    const aiUserId = await getAiUserId();
+    const [pinnedArticle] = await db
+        .update(articles)
+        .set({ isPinned: pinned, updatedAt: new Date() })
+        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
+        .returning();
+
+    if (pinnedArticle) {
+        await invalidateArticleCache(pinnedArticle, userId);
+    }
+
+    return pinnedArticle;
 };
 
 /**
@@ -404,7 +445,7 @@ export const queryPublishedArticles = async () => {
         .select()
         .from(articles)
         .where(and(isNull(articles.deleteAt), isNotNull(articles.publishedAt)))
-        .orderBy(desc(articles.publishedAt));
+        .orderBy(desc(articles.isPinned), desc(articles.publishedAt));
         
     await redis.setex(cacheKey, 3600, JSON.stringify(publishedList));
     return publishedList;

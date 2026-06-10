@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const articles = pgTable("articles", {
@@ -10,6 +10,7 @@ export const articles = pgTable("articles", {
     imageUrl: text("image_url"),
     tags: text("tags").array(),
     publishedAt: timestamp("published_at"),
+    isPinned: boolean("is_pinned").default(false).notNull(), // 是否置顶（精选位优先展示）
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deleteAt: timestamp("deleted_at"),

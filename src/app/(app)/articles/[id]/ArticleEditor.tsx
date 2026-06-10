@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize } from "lucide-react";
+import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize, Pin, PinOff } from "lucide-react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
 import { TableOfContents } from "@/components/article/editor/TableOfContents";
 import { useArticleEditor } from "@/components/article/hooks";
@@ -17,6 +17,8 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
         saved,
         isPublished,
         isPublishing,
+        isPinned,
+        isPinning,
         headings,
         editor,
         titleRef,
@@ -31,6 +33,7 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
         handleDelete,
         handlePublish,
         handleUnpublish,
+        handleTogglePin,
     } = useArticleEditor(article);
 
     const [isAddingTag, setIsAddingTag] = useState(false);
@@ -114,6 +117,25 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                         >
                             <GlobeLock size={15} />
                             {isPublishing ? "发布中..." : "发布"}
+                        </button>
+                    )}
+
+                    {/* 置顶按钮：仅已发布文章可置顶 */}
+                    {isPublished && (
+                        <button
+                            onClick={handleTogglePin}
+                            disabled={isPinning}
+                            className={cn(
+                                "flex items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                isPinned
+                                    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                                    : "border-border text-muted-foreground hover:border-amber-500/30 hover:text-amber-600 dark:hover:text-amber-400",
+                                isPinning && "opacity-50 cursor-not-allowed",
+                            )}
+                            title={isPinned ? "点击取消置顶" : "置顶到博客精选位"}
+                        >
+                            {isPinned ? <Pin size={15} className="fill-current" /> : <PinOff size={15} />}
+                            {isPinning ? "处理中..." : isPinned ? "已置顶" : "置顶"}
                         </button>
                     )}
 
