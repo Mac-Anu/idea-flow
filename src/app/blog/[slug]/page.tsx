@@ -6,6 +6,7 @@ import { estimateReadTime } from "@/lib/article";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BlogArticleContent } from "./BlogArticleContent";
 import { AISummaryCard } from "@/components/article/AISummaryCard";
+import { ReadingProgress } from "@/components/article/ReadingProgress";
 
 import { queryArticleItem } from "@/server/articles/service";
 
@@ -50,6 +51,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans">
+            {/* 阅读进度条 */}
+            <ReadingProgress />
+
             {/* Header */}
             <nav className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-xl">
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
