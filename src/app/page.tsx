@@ -189,12 +189,24 @@ export default async function Home(props: {
                             </aside>
                         </div>
                     ) : (
-                        <div className="text-center py-20">
-                            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted border border-border flex items-center justify-center">
-                                <Sparkles className="w-7 h-7 text-muted-foreground" />
+                        <div className="flex flex-col items-center text-center py-24">
+                            <div className="relative mb-7">
+                                <div className="absolute inset-0 -z-10 blur-2xl rounded-full bg-gradient-to-br from-[var(--brand-from)] to-[var(--brand-to)] opacity-20" />
+                                <div className="w-20 h-20 rounded-3xl bg-card border border-border flex items-center justify-center shadow-sm">
+                                    <Sparkles className="w-9 h-9 text-primary" />
+                                </div>
                             </div>
-                            <p className="text-muted-foreground text-lg">还没有发布任何文章</p>
-                            <p className="text-muted-foreground/60 text-sm mt-2">登录后撰写并发布你的第一篇作品吧</p>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">空白，正是开始的地方</h2>
+                            <p className="text-muted-foreground text-sm max-w-sm mb-7 leading-relaxed">
+                                还没有发布任何文章。{user ? "现在就去写下第一篇灵感吧。" : "登录后即可撰写并发布你的第一篇作品。"}
+                            </p>
+                            <Link href={user ? "/articles" : "/sign-in"}>
+                                <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--brand-from)] to-[var(--brand-to)] text-white text-sm font-medium shadow-sm hover:brightness-110 hover:scale-[1.02] transition-all">
+                                    <Sparkles className="w-4 h-4" />
+                                    {user ? "开始写作" : "登录开始"}
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </Link>
                         </div>
                     )}
                 </div>

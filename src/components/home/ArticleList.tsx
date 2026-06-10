@@ -185,9 +185,29 @@ export function ArticleList({
                     )}
                 </>
             ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-sm">该标签下暂无文章</p>
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center text-center py-16"
+                >
+                    <div className="w-14 h-14 mb-5 rounded-2xl bg-muted border border-border flex items-center justify-center">
+                        <Tag className="w-6 h-6 text-muted-foreground/70" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground mb-1">
+                        「{activeTag}」标签下还没有文章
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-5">
+                        换个标签，或回到全部文章看看
+                    </p>
+                    <button
+                        onClick={() => handleTagClick(null)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 transition-colors"
+                    >
+                        <X className="w-3.5 h-3.5" />
+                        查看全部文章
+                    </button>
+                </motion.div>
             )}
         </div>
     );

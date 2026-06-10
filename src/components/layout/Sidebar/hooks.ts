@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useArticleStore } from "@/components/article/store";
 import { client } from "@/lib/hono";
@@ -14,6 +14,18 @@ export const useSidebar = (articles: Article[]) => {
     const sidebarRef = useRef<HTMLElement>(null);
     const activeArticleId = useArticleStore((state) => state.activeArticleId);
     const activeArticleTitle = useArticleStore((state) => state.activeArticleTitle);
+
+    // 全局 ⌘K / Ctrl+K 唤起搜索面板（侧边栏徽章上承诺的快捷键）
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                setIsSearchOpen((open) => !open);
+            }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, []);
 
     const DISPLAY_LIMIT = 10;
     const displayedArticles = articles.slice(0, DISPLAY_LIMIT);

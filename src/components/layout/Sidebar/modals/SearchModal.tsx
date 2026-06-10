@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { Search, FileText, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -69,14 +70,23 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
     const modalContent = (
         <>
             {/* 遮罩层 */}
-            <div className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-[2px]" onClick={onClose} />
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-[2px]"
+                onClick={onClose}
+            />
 
             {/* 弹窗本体 */}
-            <div
-                className={`fixed top-[12%] left-1/2 -translate-x-1/2 z-[9999] 
+            <motion.div
+                initial={{ opacity: 0, scale: 0.96, x: "-50%", y: -8 }}
+                animate={{ opacity: 1, scale: 1, x: "-50%", y: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                className={`fixed top-[12%] left-1/2 z-[9999]
                 ${results.length > 0 ? "w-[95vw] max-w-[850px]" : "w-[90vw] max-w-[580px]"}
-                bg-popover rounded-[24px] shadow-[0_30px_60px_rgba(0,0,0,0.08)] 
-                border border-border overflow-hidden backdrop-blur-xl text-popover-foreground transition-all duration-300`}
+                bg-popover rounded-[24px] shadow-[0_30px_60px_rgba(0,0,0,0.08)]
+                border border-border overflow-hidden backdrop-blur-xl text-popover-foreground transition-[width,max-width] duration-300`}
             >
                 {/* 搜索栏 */}
                 <div className="flex items-center gap-4 px-6 py-4 border-b border-border bg-transparent">
@@ -239,7 +249,7 @@ export const SearchModal = ({ onClose }: { onClose: () => void }) => {
                         <span>关闭</span>
                     </button>
                 </div>
-            </div>
+            </motion.div>
         </>
     );
 

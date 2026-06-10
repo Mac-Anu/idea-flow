@@ -34,7 +34,8 @@ describe("ArticleList", () => {
                 activeTag="不存在的标签"
             />,
         );
-        expect(screen.getByText("该标签下暂无文章")).toBeInTheDocument();
+        expect(screen.getByText("查看全部文章")).toBeInTheDocument();
+        expect(screen.getByText(/还没有文章/)).toBeInTheDocument();
     });
 
     it("超过单页数量时显示「加载更多」", () => {
