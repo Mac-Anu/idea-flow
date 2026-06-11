@@ -451,3 +451,78 @@ export const queryPublishedArticles = async () => {
     return publishedList;
 };
 
+/**
+ * 查询与指定文章相关的推荐文章（基于标签相似度，带兜底）
+ *
+ * 算法：用 Jaccard 相似度衡量两篇文章标签集合的接近程度
+ *   相似度 = 共同标签数 / 标签并集大小（取值 0~1，越大越相关）
+ * 先挑标签相关的文章按相似度降序排；若不足 limit 篇，再用「最新的其他文章」
+ * 兜底补齐到 limit。这样只要站点有别的文章，推荐区块就不会空着。
+ *
+ * @param slugOrId - 当前文章的 slug 或 id
+ * @param limit - 最多返回的推荐数量（默认 3）
+ * @returns 推荐文章列表（精简字段：id/slug/title/summary/tags/publishedAt）
+ */
+export const queryRelatedArticles = async (slugOrId: string, limit: number = 3) => {
+    // 复用公开文章列表（自带 1 小时缓存），避免额外打库
+    const allPublished = (await queryPublishedArticles()) as (typeof articles.$inferSelect)[];
+
+    // 定位当前文章
+    const current = allPublished.find(
+        (a) => a.slug === slugOrId || a.id === slugOrId,
+    );
+    if (!current) return [];
+
+    // 除当前文章外的所有候选
+    const candidates = allPublished.filter((a) => a.id !== current.id);
+    if (candidates.length === 0) return [];
+
+    const currentTags: string[] = current.tags ?? [];
+    const currentSet = new Set(currentTags);
+
+    type Article = typeof articles.$inferSelect;
+    const publishedTime = (a: Article) =>
+        a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+
+    // 1) 标签相关：算 Jaccard 相似度，只保留有共同标签的，按相似度→时间降序
+    const related = candidates
+        .map((a) => {
+            const tags = a.tags ?? [];
+            if (currentTags.length === 0 || tags.length === 0) {
+                return { article: a, score: 0 };
+            }
+            const intersection = tags.filter((t) => currentSet.has(t)).length;
+            const union = new Set([...currentTags, ...tags]).size;
+            const score = union === 0 ? 0 : intersection / union;
+            return { article: a, score };
+        })
+        .filter((item) => item.score > 0)
+        .sort((x, y) => {
+            if (y.score !== x.score) return y.score - x.score;
+            return publishedTime(y.article) - publishedTime(x.article);
+        })
+        .map((item) => item.article);
+
+    // 2) 兜底：相关文章不够 limit 篇时，用「最新的其他文章」补齐
+    let result = related;
+    if (result.length < limit) {
+        const usedIds = new Set(result.map((a) => a.id));
+        const fallback = candidates
+            .filter((a) => !usedIds.has(a.id)) // 不重复推荐已选中的
+            .sort((x, y) => publishedTime(y) - publishedTime(x)); // 最新优先
+        result = [...result, ...fallback].slice(0, limit);
+    } else {
+        result = result.slice(0, limit);
+    }
+
+    // 只回传卡片需要的精简字段
+    return result.map((a) => ({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        summary: a.summary,
+        tags: a.tags,
+        publishedAt: a.publishedAt,
+    }));
+};
+

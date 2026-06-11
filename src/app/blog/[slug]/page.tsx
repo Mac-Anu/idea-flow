@@ -7,8 +7,9 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BlogArticleContent } from "./BlogArticleContent";
 import { AISummaryCard } from "@/components/article/AISummaryCard";
 import { ReadingProgress } from "@/components/article/ReadingProgress";
+import { RelatedArticles } from "@/components/article/RelatedArticles";
 
-import { queryArticleItem } from "@/server/articles/service";
+import { queryArticleItem, queryRelatedArticles } from "@/server/articles/service";
 
 async function getArticle(slug: string) {
     try {
@@ -48,6 +49,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     if (!article) {
         notFound();
     }
+
+    // 基于标签相似度查询相关推荐（服务端算好后传给展示组件）
+    const relatedArticles = await queryRelatedArticles(slug, 3);
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans">
@@ -123,6 +127,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                     {/* Rich text body + TOC (client component) */}
                     <BlogArticleContent content={article.content} />
+
+                    {/* 相关推荐（基于标签相似度） */}
+                    <RelatedArticles articles={relatedArticles} />
                 </div>
             </main>
 
