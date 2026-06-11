@@ -22,11 +22,13 @@ export const useAIChat = () => {
         }
     }, [messages, isOpen]);
 
-    const handleSend = async () => {
-        if (!inputValue.trim() || isLoading) return;
-        
-        const userMsg = inputValue.trim();
-        setInputValue("");
+    const handleSend = async (overrideText?: string) => {
+        // overrideText 来自快捷按钮；没有则取输入框的值
+        const userMsg = (overrideText ?? inputValue).trim();
+        if (!userMsg || isLoading) return;
+
+        // 只有走输入框时才清空输入框
+        if (overrideText === undefined) setInputValue("");
         
         const newMessages = [...messages, { role: "user", content: userMsg } as Message];
         setMessages(newMessages);
@@ -103,6 +105,12 @@ export const useAIChat = () => {
         }
     };
 
+    // 根据当前页面决定展示哪组快捷提问
+    const quickPrompts =
+        pathname.startsWith("/blog/") || pathname.startsWith("/articles/")
+            ? CHAT_CONFIG.QUICK_PROMPTS.ARTICLE
+            : CHAT_CONFIG.QUICK_PROMPTS.DEFAULT;
+
     return {
         isOpen,
         setIsOpen,
@@ -111,6 +119,7 @@ export const useAIChat = () => {
         messages,
         isLoading,
         messagesEndRef,
-        handleSend
+        handleSend,
+        quickPrompts
     };
 };
