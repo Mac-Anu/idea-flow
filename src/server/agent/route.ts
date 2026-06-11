@@ -5,12 +5,13 @@ import { AuthProtectedMiddleware } from "../user/middlwares";
 import { reflectionAgent, llm } from "./index";
 import { chatRequestSchema, chatResponseSchema, explainRequestSchema, explainResponseSchema, editorRequestSchema, editorResponseSchema } from "./schema";
 import { createSuccessResponse, createServerErrorResponse } from "../common/response";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { SystemMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
+import { streamSSE } from "hono/streaming";
 import { getRedisClient } from "@/lib/redis";
 import crypto from "crypto";
 import type { AuthEnv } from "../user/middlwares";
 export const agentTags = ["AI智能体"];
-export const agentApi = createHonoApp().post(
+export const agentApi = createHonoApp<AuthEnv>().post(
     "/chat",
     zValidator("json", chatRequestSchema),
     describeRoute({
@@ -25,7 +26,7 @@ export const agentApi = createHonoApp().post(
     AuthProtectedMiddleware,
     async (c) => {
         const { messages } = await c.req.valid("json");
-        const user = (c as any).get("user");
+        const user = c.get("user");
 
         try {
             // AI 请求频率限制：每分钟最多 10 次
@@ -51,7 +52,7 @@ export const agentApi = createHonoApp().post(
                 : lastMsg.content;
             
             // 把完整的思考过程也返回给前端
-            const fullHistory = result.messages.map((m: any) => ({
+            const fullHistory = result.messages.map((m: BaseMessage) => ({
                 role: m._getType ? m._getType() : "unknown",
                 content: m.content
             }));
@@ -66,6 +67,59 @@ export const agentApi = createHonoApp().post(
             console.error("Agent Error:", error);
             return c.json({ message: "AI 生成失败，请检查 API Key 或网络环境" }, 500);
         }
+    }
+)
+.post(
+    "/chat/stream",
+    zValidator("json", chatRequestSchema),
+    describeRoute({
+        tags: agentTags,
+        summary: "AI 助理流式问答 (SSE)",
+        description: "直连大模型逐字流式输出，用于普通问答场景。以 Server-Sent Events 推送 token。",
+    }),
+    AuthProtectedMiddleware,
+    async (c) => {
+        const { messages } = c.req.valid("json");
+        const user = c.get("user");
+
+        // 限流先于建流：超限直接返回 JSON 错误（此时还没切到 SSE）
+        try {
+            const redis = getRedisClient(serverIncs.redis);
+            const rateLimitKey = `ai:ratelimit:chat:${user?.id || "anonymous"}`;
+            const count = await redis.incr(rateLimitKey);
+            if (count === 1) {
+                await redis.expire(rateLimitKey, 60);
+            }
+            if (count > 10) {
+                return c.json({ message: "调用过于频繁，请等待一分钟后再试" }, 429);
+            }
+        } catch (e) {
+            console.warn("Rate limit check failed:", e);
+        }
+
+        // 切换为 SSE 流式响应，逐 token 推送
+        return streamSSE(c, async (stream) => {
+            try {
+                // 直连 LLM 的流式接口（不走反思工作流，换取逐字输出的实时体验）
+                const llmStream = await llm.stream(messages);
+
+                for await (const chunk of llmStream) {
+                    const text = typeof chunk.content === "string"
+                        ? chunk.content
+                        : "";
+                    if (text) {
+                        // 用 JSON 编码每个 token，避免换行符破坏 SSE 帧格式（SSE 对 \n 敏感）
+                        await stream.writeSSE({ event: "token", data: JSON.stringify(text) });
+                    }
+                }
+
+                // 显式发送结束信号，前端据此收尾
+                await stream.writeSSE({ event: "done", data: "[DONE]" });
+            } catch (error) {
+                console.error("Agent Stream Error:", error);
+                await stream.writeSSE({ event: "error", data: "AI 生成失败，请稍后再试" });
+            }
+        });
     }
 )
 .post(
@@ -143,7 +197,7 @@ export const agentApi = createHonoApp().post(
     AuthProtectedMiddleware,
     async (c) => {
         const { text, action } = await c.req.valid("json");
-        const user = (c as any).get("user");
+        const user = c.get("user");
 
         try {
             // AI 请求频率限制：每分钟最多 10 次
@@ -158,7 +212,7 @@ export const agentApi = createHonoApp().post(
             }
 
             let systemPrompt = "";
-            let userPrompt = `文本：\n"${text}"`;
+            const userPrompt = `文本：\n"${text}"`;
 
             if (action === "tldr") {
                 systemPrompt = `你是一个专业的文章导读助手。请为用户提供的一段文本或全篇文章提取精炼的导读摘要（TL;DR）。
