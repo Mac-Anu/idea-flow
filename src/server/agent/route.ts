@@ -12,7 +12,7 @@ import {
     editorResponseSchema,
 } from "./schema";
 import { createSuccessResponse, createServerErrorResponse } from "../common/response";
-import { SystemMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
+import { AIMessage, SystemMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { streamSSE } from "hono/streaming";
 import { getRedisClient } from "@/lib/redis";
 import crypto from "crypto";
@@ -53,12 +53,11 @@ export const agentApi = createHonoApp<AuthEnv>()
                     messages: messages,
                 });
 
-                // 如果最后一条消息是审查员的 PERFECT 许可，那么实际的答案其实在倒数第二条里
-                const lastMsg = result.messages[result.messages.length - 1];
+                // 工作流总在 reflect 之后结束,最后一条是"审查意见"(role: user)。
+                // 真正的答案是生成节点产出的最后一条 AIMessage,直接筛出来取最新一条。
+                const aiMessages = result.messages.filter((m) => AIMessage.isInstance(m));
                 const finalContent =
-                    typeof lastMsg.content === "string" && lastMsg.content.includes("PERFECT")
-                        ? result.messages[result.messages.length - 2].content
-                        : lastMsg.content;
+                    aiMessages[aiMessages.length - 1]?.content ?? "抱歉，未能生成答案。";
 
                 // 把完整的思考过程也返回给前端
                 const fullHistory = result.messages.map((m: BaseMessage) => ({
@@ -253,15 +252,3 @@ export const agentApi = createHonoApp<AuthEnv>()
         },
     );
 
-const myTestArray = [
-    "apple",
-    "banana",
-    "orange",
-    "watermelon",
-    "grape",
-    "blueberry",
-    "strawberry",
-    "pineapple",
-    "mango",
-    "peach",
-];
