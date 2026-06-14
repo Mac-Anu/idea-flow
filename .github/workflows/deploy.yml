@@ -1,10 +1,11 @@
 name: Deploy Next.js App
 
-# 触发条件：只要 push 代码到 main 分支，就立刻开工！
+# 触发条件：main 或 feat/ 分支 push 时触发部署
 on:
   push:
     branches:
       - main
+      - 'feat/**'
 
 jobs:
   build-and-deploy:
