@@ -1,13 +1,15 @@
 import { isNil } from "lodash";
 import pinyin from "pinyin";
+import crypto from "crypto";
 import { db } from "@/db";
 import { articles, user } from "@/db/schema";
-import { eq, or, isNull, desc, isNotNull, ilike, and } from "drizzle-orm";
+import { eq, or, isNull, desc, isNotNull, ilike, and, cosineDistance, sql } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
 import { searchArticlesWithMeili } from "./search/service";
-import { addSearchSyncJob, addSearchDeleteJob, addAiSummaryJob } from "./queue";
+import { addSearchSyncJob, addSearchDeleteJob, addAiSummaryJob, addEmbeddingJob } from "./queue";
 import { getRedisClient } from "@/lib/redis";
 import { serverIncs } from "../common/app";
+import { embedText, buildArticleEmbeddingText } from "../agent/embedding";
 
 const getAiUserId = async () => {
     const aiUser = await db.query.user.findFirst({
@@ -186,8 +188,9 @@ export const createArticleItem = async (data: CreateArticleInput, userId: string
     if (createArticle) {
         addSearchSyncJob(createArticle.id).catch(e => console.warn('Queue error:', e));
         addAiSummaryJob(createArticle.id).catch(e => console.warn('Queue error:', e));
+        addEmbeddingJob(createArticle.id).catch(e => console.warn('Queue error:', e));
     }
-    
+
     return createArticle;
 };
 
@@ -214,6 +217,7 @@ export const updateArticleItem = async (id: string, data: UpdateArticleInput, us
     if (updateArticle) {
         addSearchSyncJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
         addAiSummaryJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
+        addEmbeddingJob(updateArticle.id).catch(e => console.warn('Queue error:', e));
         await invalidateArticleCache(updateArticle, userId, oldArticle?.slug);
     }
 
@@ -525,4 +529,97 @@ export const queryRelatedArticles = async (slugOrId: string, limit: number = 3) 
         publishedAt: a.publishedAt,
     }));
 };
+
+/**
+ * 获取 AI 机器人的内部 User ID；不存在则创建一个傀儡用户。
+ *
+ * 与上方只读的 getAiUserId 不同：本函数带副作用（找不到会创建），
+ * 供 AI 写入类操作（如建草稿）使用，确保 AI 产生的文章有合法作者。
+ *
+ * @returns AI 傀儡用户的 id
+ */
+export const getOrCreateAiUserId = async (): Promise<string> => {
+    let aiUser = await db.query.user.findFirst({
+        where: eq(user.email, "ai_bot@ideaflow.local"),
+    });
+
+    if (!aiUser) {
+        const [newUser] = await db
+            .insert(user)
+            .values({
+                id: crypto.randomUUID(),
+                name: "IdeaFlow AI",
+                username: "ideaflow_ai",
+                email: "ai_bot@ideaflow.local",
+                emailVerified: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })
+            .returning();
+        aiUser = newUser;
+    }
+
+    return aiUser.id;
+};
+
+/**
+ * 基于 pgvector 的语义检索：返回与查询向量语义最接近的已发布文章。
+ *
+ * 用余弦距离 (cosineDistance, 即 <=>) 在数据库内排序，只取最相关的若干篇，
+ * 替代旧的「全表拉取 + 内存 includes 字面匹配」，支持语义召回。
+ *
+ * @param queryVector - 查询文本的向量（1024 维，由 embedText 生成）
+ * @param limit - 返回条数上限（默认 5）
+ * @returns 精简字段的文章列表，按相关度降序
+ */
+export const searchPublishedArticlesByVector = async (
+    queryVector: number[],
+    limit: number = 5,
+) => {
+    const distance = cosineDistance(articles.embedding, queryVector);
+    return db
+        .select({
+            title: articles.title,
+            summary: articles.summary,
+            tags: articles.tags,
+            slug: articles.slug,
+            publishedAt: articles.publishedAt,
+            similarity: sql<number>`1 - (${distance})`, // 相似度，便于调试/排查
+        })
+        .from(articles)
+        .where(
+            and(
+                isNull(articles.deleteAt),
+                isNotNull(articles.publishedAt),
+                isNotNull(articles.embedding), // 跳过尚未生成向量的文章
+            ),
+        )
+        .orderBy(distance) // 距离升序 = 最相关在前
+        .limit(limit);
+};
+
+/**
+ * 为指定文章生成并写回 embedding 向量（增量更新用）。
+ *
+ * 供后台队列在文章创建/发布/摘要更新后异步调用，使新内容可被语义检索。
+ * 拼文本逻辑与回填脚本共用 buildArticleEmbeddingText，保证一致。
+ *
+ * @param articleId - 目标文章 ID
+ */
+export const generateArticleEmbedding = async (articleId: string) => {
+    const [article] = await db
+        .select()
+        .from(articles)
+        .where(eq(articles.id, articleId));
+    if (!article || !article.content) return;
+
+    const text = buildArticleEmbeddingText(article);
+    const vector = await embedText(text);
+    await db
+        .update(articles)
+        .set({ embedding: vector })
+        .where(eq(articles.id, articleId));
+};
+
+
 

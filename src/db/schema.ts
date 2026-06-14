@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean, vector } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const articles = pgTable("articles", {
@@ -9,6 +9,8 @@ export const articles = pgTable("articles", {
     summary: text("summary"), // AI 总结字段 (TL;DR)
     imageUrl: text("image_url"),
     tags: text("tags").array(),
+    // 文章语义向量（通义 text-embedding-v4，1024 维）。可空：存量文章尚未回填，新发布时异步写入。
+    embedding: vector("embedding", { dimensions: 1024 }),
     publishedAt: timestamp("published_at"),
     isPinned: boolean("is_pinned").default(false).notNull(), // 是否置顶（精选位优先展示）
     createdAt: timestamp("created_at").defaultNow().notNull(),

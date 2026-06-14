@@ -58,3 +58,10 @@ AI功能重构规划书.md
 test-*.js
 test-*.mjs
 seed-user.*
+seed-remote.*
+update-user.sql
+
+# IDE / local runtime artifacts
+.idea/
+dump.rdb
+run_log.txt
