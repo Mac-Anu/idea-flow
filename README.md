@@ -5,7 +5,7 @@ IdeaFlow 是我个人开发并使用的一套基于 Next.js 15 App Router 构建
 
 ## 特性
 
-- **AI 智能体交互**: 基于 LangGraph 构建的反思型 Agent。支持在富文本编辑器中划词唤起解释、翻译及润色，并自动生成文章导读 (TL;DR)。
+- **AI 智能体交互**: 基于 LangGraph 构建的**反思型 Agent**(Generator-Critic):生成内容后自我评审,不合格带着意见自动重写,以此降低幻觉、提升质量。支持在富文本编辑器中划词唤起解释、翻译及润色,并自动生成文章导读 (TL;DR)。同时实现 **RAG 语义检索**(pgvector 余弦距离召回)与 **Tool Calling**(模型自主决定调用工具)。
 - **全栈类型安全**: 基于 TypeScript 构建，后端使用 Drizzle/Prisma + Postgres。
 - **全文检索**: 抛弃传统模糊匹配，自建 Meilisearch 引擎实现极速且支持纠错的全文搜索。
 - **现代化编辑器**: 深度定制的 Tiptap Headless 编辑器，支持 Markdown 语法与 `/` 快捷指令。
@@ -70,6 +70,18 @@ pnpm dbp
 pnpm run dev
 ```
 打开浏览器访问 [http://localhost:3000](http://localhost:3000) 即可预览。
+
+---
+
+## 🧠 AI 能力详解
+
+本项目以 **LangGraph** 编排三类核心 Agent 能力,均可在阅读/写作场景实际触发:
+
+- **反思工作流 (Reflection / Generator-Critic)**:生成节点写内容 → 评审节点结构化输出 `{passed, reason}` 判定质量 → 不合格则带着评审意见回流重写,设迭代上限防死循环。"意见回流"是反思区别于"单纯多调几次"的本质。
+- **RAG 语义检索**:文本经 embedding 转向量,在 PostgreSQL + pgvector 中按余弦距离召回最相关片段作为上下文(grounding),显著降低幻觉。
+- **Tool Calling**:模型根据需要自主决定调用哪个工具、填什么参数(如检索已发布文章),而非硬编码流程。
+
+> 编排逻辑(循环、停止条件、意见回流)均为显式控制流,可观测、好调试、好落库,而非框架黑盒。
 
 ---
 
