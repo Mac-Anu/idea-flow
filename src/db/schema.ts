@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, boolean, vector } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean, vector, integer } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const articles = pgTable("articles", {
@@ -19,6 +19,22 @@ export const articles = pgTable("articles", {
     userId: text("user_id")
         .notNull()
         .references(() => user.id, { onDelete: "cascade" }),
+});
+
+// 文章分块表：一篇文章切成多个语义块，每块单独向量化，用于分块 RAG 检索。
+// 与 articles.embedding（整篇一个向量）并存，检索走本表，旧列保留向后兼容。
+export const articleChunks = pgTable("article_chunks", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    articleId: uuid("article_id")
+        .notNull()
+        .references(() => articles.id, { onDelete: "cascade" }),
+    // 同一篇文章内的块序号（从 0 递增），便于排序与排查
+    chunkIndex: integer("chunk_index").notNull(),
+    // 该块原文：rerank 精排和喂给 LLM 都用它
+    content: text("content").notNull(),
+    // 该块语义向量（通义 text-embedding-v4，1024 维）
+    embedding: vector("embedding", { dimensions: 1024 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const tags = pgTable("tags", {

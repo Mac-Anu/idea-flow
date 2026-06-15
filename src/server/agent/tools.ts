@@ -5,29 +5,25 @@ import {
     getOrCreateAiUserId,
     searchPublishedArticlesByVector,
 } from "../articles/service";
-import { embedText } from "./embedding";
 
 /**
- * 检索已发布文章的工具（pgvector 语义检索）
+ * 检索已发布文章的工具（分块语义检索 + rerank 精排）
  *
- * 旧版用 String.includes 做字面子串匹配，只能命中完全重合的词，
- * 语义相近但用词不同的（如「前端性能」vs「网页提速」）会漏召回。
- * 现改为：关键词 → 向量，在数据库内按余弦距离排序取 top5，比的是语义而非字面。
+ * 旧版用 String.includes 做字面子串匹配，只能命中完全重合的词，语义相近但用词不同的
+ * （如「前端性能」vs「网页提速」）会漏召回。现改为：关键词在 article_chunks 上做向量
+ * 粗召回，再用 qwen3-rerank 二次精排取最相关的若干篇，比的是语义而非字面。
  */
 export const searchPublishedArticlesTool = tool(
     async ({ keyword }) => {
         try {
-            // 1. 关键词转查询向量（通义 text-embedding-v4，1024 维）
-            const queryVector = await embedText(keyword);
-
-            // 2. 交给 service 层做 pgvector 语义检索，取最相关的 5 篇
-            const matched = await searchPublishedArticlesByVector(queryVector, 5);
+            // 向量粗召回 + rerank 精排 + 按文章去重，取最相关的 5 篇（细节在 service 层）
+            const matched = await searchPublishedArticlesByVector(keyword, 5);
 
             if (matched.length === 0) {
                 return "知识库中暂无可检索的文章。";
             }
 
-            // 3. 格式化输出供大模型读取
+            // 格式化输出供大模型读取
             return matched
                 .map(
                     (a) =>

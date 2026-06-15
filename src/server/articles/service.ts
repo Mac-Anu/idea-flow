@@ -2,14 +2,15 @@ import { isNil } from "lodash";
 import pinyin from "pinyin";
 import crypto from "crypto";
 import { db } from "@/db";
-import { articles, user } from "@/db/schema";
+import { articles, articleChunks, user } from "@/db/schema";
 import { eq, or, isNull, desc, isNotNull, ilike, and, cosineDistance, sql } from "drizzle-orm";
 import { CreateArticleInput, UpdateArticleInput } from "./type";
 import { searchArticlesWithMeili } from "./search/service";
 import { addSearchSyncJob, addSearchDeleteJob, addAiSummaryJob, addEmbeddingJob } from "./queue";
 import { getRedisClient } from "@/lib/redis";
 import { serverIncs } from "../common/app";
-import { embedText, buildArticleEmbeddingText } from "../agent/embedding";
+import { embedText, buildArticleEmbeddingText, chunkArticle } from "../agent/embedding";
+import { rerankByRelevance } from "../agent/rerank";
 
 const getAiUserId = async () => {
     const aiUser = await db.query.user.findFirst({
@@ -563,46 +564,92 @@ export const getOrCreateAiUserId = async (): Promise<string> => {
 };
 
 /**
- * 基于 pgvector 的语义检索：返回与查询向量语义最接近的已发布文章。
+ * 分块语义检索 + rerank 精排：返回与查询语义最相关的已发布文章。
  *
- * 用余弦距离 (cosineDistance, 即 <=>) 在数据库内排序，只取最相关的若干篇，
- * 替代旧的「全表拉取 + 内存 includes 字面匹配」，支持语义召回。
+ * 两段式（工业级 RAG 标配）：
+ *  1) 召回：在 article_chunks 上用余弦距离取 top-N 个块（N 远大于最终条数，给精排留候选）；
+ *  2) 精排：用 qwen3-rerank 对 query 与候选块文本二次打分，取 top-K；
+ *  3) 去重：top-K 块可能来自同一篇文章，按 articleId 去重后回填文章字段。
  *
- * @param queryVector - 查询文本的向量（1024 维，由 embedText 生成）
- * @param limit - 返回条数上限（默认 5）
+ * @param query - 用户查询文本（既用于向量召回，也用于 rerank 打分）
+ * @param limit - 最终返回的文章条数上限（默认 5）
  * @returns 精简字段的文章列表，按相关度降序
  */
 export const searchPublishedArticlesByVector = async (
-    queryVector: number[],
+    query: string,
     limit: number = 5,
 ) => {
-    const distance = cosineDistance(articles.embedding, queryVector);
-    return db
+    const RECALL_N = 20; // 向量粗召回的块数，给 rerank 留候选空间
+
+    const queryVector = await embedText(query);
+    const distance = cosineDistance(articleChunks.embedding, queryVector);
+
+    // 1) 召回：join 文章拿到展示字段，按块的余弦距离排序取 top-N
+    const recalled = await db
         .select({
+            articleId: articles.id,
             title: articles.title,
             summary: articles.summary,
             tags: articles.tags,
             slug: articles.slug,
             publishedAt: articles.publishedAt,
-            similarity: sql<number>`1 - (${distance})`, // 相似度，便于调试/排查
+            chunkContent: articleChunks.content,
+            similarity: sql<number>`1 - (${distance})`,
         })
-        .from(articles)
+        .from(articleChunks)
+        .innerJoin(articles, eq(articleChunks.articleId, articles.id))
         .where(
             and(
                 isNull(articles.deleteAt),
                 isNotNull(articles.publishedAt),
-                isNotNull(articles.embedding), // 跳过尚未生成向量的文章
+                isNotNull(articleChunks.embedding),
             ),
         )
-        .orderBy(distance) // 距离升序 = 最相关在前
-        .limit(limit);
+        .orderBy(distance)
+        .limit(RECALL_N);
+
+    if (recalled.length === 0) return [];
+
+    // 2) 精排：按 query 与块原文的相关性重排（失败自动降级为召回顺序）
+    const reranked = await rerankByRelevance(
+        query,
+        recalled,
+        (r) => r.chunkContent,
+        RECALL_N, // 先全量重排，去重后再截到 limit
+    );
+
+    // 3) 去重：同一篇文章可能命中多个块，保留最高排名的那条；截到 limit 篇
+    const seen = new Set<string>();
+    const articlesOut: Array<{
+        title: string;
+        summary: string | null;
+        tags: unknown;
+        slug: string | null;
+        publishedAt: Date | null;
+        similarity: number;
+    }> = [];
+    for (const r of reranked) {
+        if (seen.has(r.articleId)) continue;
+        seen.add(r.articleId);
+        articlesOut.push({
+            title: r.title,
+            summary: r.summary,
+            tags: r.tags,
+            slug: r.slug,
+            publishedAt: r.publishedAt,
+            similarity: r.similarity,
+        });
+        if (articlesOut.length >= limit) break;
+    }
+    return articlesOut;
 };
 
 /**
- * 为指定文章生成并写回 embedding 向量（增量更新用）。
+ * 为指定文章生成并写回分块向量（增量更新用）。
  *
  * 供后台队列在文章创建/发布/摘要更新后异步调用，使新内容可被语义检索。
- * 拼文本逻辑与回填脚本共用 buildArticleEmbeddingText，保证一致。
+ * 把文章切成多个语义块（chunkArticle），逐块向量化后写入 article_chunks。
+ * 幂等：先删该文章已有的块，再重新生成，避免重复或残留。
  *
  * @param articleId - 目标文章 ID
  */
@@ -613,12 +660,23 @@ export const generateArticleEmbedding = async (articleId: string) => {
         .where(eq(articles.id, articleId));
     if (!article || !article.content) return;
 
-    const text = buildArticleEmbeddingText(article);
-    const vector = await embedText(text);
-    await db
-        .update(articles)
-        .set({ embedding: vector })
-        .where(eq(articles.id, articleId));
+    const chunks = chunkArticle(article);
+    if (chunks.length === 0) return;
+
+    // 幂等：先清掉旧块，再写新块
+    await db.delete(articleChunks).where(eq(articleChunks.articleId, articleId));
+
+    const rows = [];
+    for (let i = 0; i < chunks.length; i++) {
+        const vector = await embedText(chunks[i]);
+        rows.push({
+            articleId,
+            chunkIndex: i,
+            content: chunks[i],
+            embedding: vector,
+        });
+    }
+    await db.insert(articleChunks).values(rows);
 };
 
 

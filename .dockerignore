@@ -1,0 +1,30 @@
+# 依赖与构建产物（镜像内会重新 install / build）
+node_modules
+.next
+out
+
+# 版本控制与 IDE
+.git
+.gitignore
+.idea
+.vscode
+.claude
+.gemini
+
+# 环境变量与密钥（绝不进镜像）
+.env
+.env.*
+!.env.example
+
+# 本地数据与日志
+data.ms
+dumps
+*.log
+dump.rdb
+meilisearch
+
+# 测试与杂项
+coverage
+*.local
+.DS_Store
+tsconfig.tsbuildinfo
