@@ -16,6 +16,8 @@ export const metadata: Metadata = {
     description: "技术探索、项目复盘与成长思考的文章合集。",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function BlogListPage(props: {
     searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {

@@ -11,6 +11,8 @@ import { RelatedArticles } from "@/components/article/RelatedArticles";
 
 import { queryArticleItem, queryRelatedArticles } from "@/server/articles/service";
 
+export const dynamic = "force-dynamic";
+
 async function getArticle(slug: string) {
     try {
         const article = await queryArticleItem(slug);

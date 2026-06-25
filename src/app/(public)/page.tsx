@@ -9,6 +9,8 @@ import { profileConfig } from "@/config/profile";
 import type { Article } from "@/server/articles/type";
 import type { Project } from "@/server/projects/type";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
     let articles: Article[] = [];
     let projects: Project[] = [];

@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     description: profileConfig.bio,
 };
 
+export const dynamic = "force-dynamic";
+
 const SOCIAL_ICONS: Record<string, ComponentType<{ size?: number | string }>> = {
     github: Github,
     mail: Mail,

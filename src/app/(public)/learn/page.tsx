@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     description: "成体系的学习记录与技术沉淀。",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function LearnPage() {
     return (
         <TaggedArticleList

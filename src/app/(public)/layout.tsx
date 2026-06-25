@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { getSiteProfile } from "@/server/site/service";
 import { profileConfig } from "@/config/profile";
 
+export const dynamic = "force-dynamic";
+
 /**
  * 公开站点布局：左侧固定 Profile 侧边栏 + 右侧内容区。
  * 首页、博客列表、项目、速查表、学习笔记、关于页共用此布局。

@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     description: "浓缩的技术速查卡片：面试要点、语法速记、常用命令。",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function CheatsheetPage() {
     return (
         <TaggedArticleList

@@ -4,6 +4,8 @@ import { queryProjectItem } from "@/server/projects/service";
 import { ProjectDetail } from "@/components/projects/ProjectDetail";
 import type { Project } from "@/server/projects/type";
 
+export const dynamic = "force-dynamic";
+
 async function getProject(slug: string): Promise<Project | null> {
     try {
         return (await queryProjectItem(slug)) as unknown as Project | null;

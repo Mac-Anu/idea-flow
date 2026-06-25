@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     description: "我的项目作品集：技术栈、源码与在线演示。",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
     let projects: Project[] = [];
     try {
