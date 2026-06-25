@@ -4,6 +4,8 @@ import { projectsApi } from "@/api/projects";
 import { ProjectForm } from "@/components/projects/ProjectForm";
 import type { Project } from "@/server/projects/type";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectEditPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const headersList = await headers();

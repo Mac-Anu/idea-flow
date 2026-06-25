@@ -4,6 +4,8 @@ import { projectsApi } from "@/api/projects";
 import { ProjectsManagerClient } from "./ProjectsManagerClient";
 import type { Project } from "@/server/projects/type";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsManagerPage() {
     const headersList = await headers();
     const res = await projectsApi.list({ headers: { cookie: headersList.get("cookie") || "" } });
