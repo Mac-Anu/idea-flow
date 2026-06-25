@@ -10,6 +10,7 @@ export const ArticleSchema = z.object({
     tags: z.array(z.string()).nullable().optional().meta({ description: "文章标签数组" }),
     publishedAt: z.string().nullable().optional().meta({ description: "文章发布时间，null 表示草稿" }),
     isPinned: z.boolean().optional().meta({ description: "是否置顶" }),
+    showOnHome: z.boolean().optional().meta({ description: "是否展示在首页文章区" }),
     createdAt: z.string().meta({ description: "文章创建时间" }),
     updatedAt: z.string().meta({ description: "文章更新时间" }),
     deleteAt: z.string().nullable().meta({ description: "文章删除时间" }),
@@ -35,6 +36,7 @@ export const updateArticleSchema = z
         content: z.string().meta({ description: "修改后的新内容" }),
         summary: z.string().optional().meta({ description: "修改后的AI 总结内容" }),
         slug: z.string().optional().meta({ description: "修改后的短链接别名(slug)" }),
+        imageUrl: z.string().nullable().optional().meta({ description: "修改后的文章封面图片URL" }),
         tags: z.array(z.string()).optional().meta({ description: "修改后的标签" }),
     })
     .meta({ description: "修改文章的请求参数格式" });
@@ -51,3 +53,8 @@ export const pinArticleSchema = z
     })
     .meta({ description: "置顶/取消置顶文章的请求参数格式" });
 
+export const homeArticleSchema = z
+    .object({
+        showOnHome: z.boolean().meta({ description: "true 展示在首页，false 从首页移除" }),
+    })
+    .meta({ description: "首页展示/取消展示文章的请求参数格式" });

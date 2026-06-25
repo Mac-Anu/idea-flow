@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
-import { Calendar, Tag, Clock, ArrowRight, ChevronDown, X } from "lucide-react";
+import { Calendar, Tag, Clock, ChevronDown, X, ArrowRight } from "lucide-react";
 import { stripHtml, formatDate, estimateReadTime } from "@/lib/article";
+import { GradientCover } from "./GradientCover";
 import type { Article } from "@/server/articles/type";
 
 const ARTICLES_PER_PAGE = 6;
@@ -29,12 +30,15 @@ interface ArticleListProps {
     articles: Article[];
     allTags: { name: string; count: number }[];
     activeTag?: string | null;
+    /** 标签筛选跳转的基础路径，默认 /blog */
+    basePath?: string;
 }
 
 export function ArticleList({
     articles,
     allTags,
     activeTag = null,
+    basePath = "/blog",
 }: ArticleListProps) {
     const router = useRouter();
     const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
@@ -49,9 +53,9 @@ export function ArticleList({
 
     const handleTagClick = (tagName: string | null) => {
         if (tagName === null || activeTag === tagName) {
-            router.push('/', { scroll: false });
+            router.push(basePath, { scroll: false });
         } else {
-            router.push(`/?tag=${tagName}`, { scroll: false });
+            router.push(`${basePath}?tag=${tagName}`, { scroll: false });
         }
         setVisibleCount(ARTICLES_PER_PAGE); // 切换标签时重置分页
     };
@@ -118,57 +122,80 @@ export function ArticleList({
                         variants={listContainer}
                         initial="hidden"
                         animate="show"
-                        className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                        className="grid grid-cols-1 gap-6 md:grid-cols-2"
                     >
-                        {displayedArticles.map((article: Article) => (
-                            <motion.div key={article.id} variants={cardItem} layout>
-                                <Link
-                                    href={`/blog/${article.slug || article.id}`}
-                                    className="group block h-full"
-                                >
-                                    <article className="h-full p-5 rounded-[20px] border border-border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
-                                        {/* Tags */}
-                                        {article.tags && article.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5 mb-3">
-                                                {article.tags.slice(0, 3).map((tag: string) => (
-                                                    <span
-                                                        key={tag}
-                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium"
-                                                    >
-                                                        {tag}
+                        {displayedArticles.map((article: Article) => {
+                            const seed = article.slug || article.id || article.title;
+                            return (
+                                <motion.div key={article.id} variants={cardItem} layout>
+                                    <Link
+                                        href={`/blog/${article.slug || article.id}`}
+                                        className="group block h-full"
+                                    >
+                                        <article className="relative flex min-h-[300px] flex-col overflow-hidden rounded-[20px] border border-border transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl sm:min-h-[280px] lg:min-h-[300px]">
+                                            {/* 封面 */}
+                                            <div className="absolute inset-0">
+                                                {article.imageUrl ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={article.imageUrl}
+                                                        alt={article.title}
+                                                        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                                                    />
+                                                ) : (
+                                                    <GradientCover seed={seed} />
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 transition-opacity duration-300" />
+                                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 to-transparent" />
+                                                <div className="absolute inset-0 bg-black/25 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100" />
+                                            </div>
+
+                                            {/* 顶部标签 */}
+                                            <div className="relative z-10 p-5 pb-0">
+                                                {article.tags && article.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {article.tags.slice(0, 3).map((tag: string) => (
+                                                            <span
+                                                                key={tag}
+                                                                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/10 backdrop-blur-sm"
+                                                            >
+                                                                # {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* 底部内容 */}
+                                            <div className="relative z-10 mt-auto p-5 pt-16 text-white">
+                                                <h3 className="mb-3 line-clamp-2 text-lg font-bold leading-snug tracking-tight">
+                                                    {article.title}
+                                                </h3>
+                                                <p className="mb-5 line-clamp-3 text-sm leading-6 text-white/75">
+                                                    {stripHtml(article.content).slice(0, 130)}
+                                                </p>
+                                                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-white/10 pt-4 text-[11px] font-medium uppercase tracking-wide text-white/60">
+                                                    <span className="flex min-w-0 items-center gap-1.5 normal-case tracking-normal">
+                                                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                                                        {formatDate(article.publishedAt || article.updatedAt)}
                                                     </span>
-                                                ))}
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="flex items-center gap-1.5 group-hover:hidden">
+                                                            <Clock className="h-3.5 w-3.5" />
+                                                            {estimateReadTime(article.content)} 分钟
+                                                        </span>
+                                                        <span className="hidden items-center gap-1.5 text-white group-hover:flex">
+                                                            Read More
+                                                            <ArrowRight className="h-3.5 w-3.5" />
+                                                        </span>
+                                                    </span>
+                                                </div>
                                             </div>
-                                        )}
-
-                                        {/* Title */}
-                                        <h3 className="text-base font-semibold text-card-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                                            {article.title}
-                                        </h3>
-
-                                        {/* Excerpt */}
-                                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4 flex-1">
-                                            {stripHtml(article.content).slice(0, 120)}
-                                        </p>
-
-                                        {/* Footer */}
-                                        <div className="flex items-center justify-between pt-3 border-t border-border/60">
-                                            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {formatDate(article.updatedAt)}
-                                                </span>
-                                                <span className="flex items-center gap-1" title="预计阅读时间">
-                                                    <Clock className="w-3 h-3" />
-                                                    {estimateReadTime(article.content)} 分钟
-                                                </span>
-                                            </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                                        </div>
-                                    </article>
-                                </Link>
-                            </motion.div>
-                        ))}
+                                        </article>
+                                    </Link>
+                                </motion.div>
+                            );
+                        })}
                     </motion.div>
 
                     {/* 加载更多 */}

@@ -396,7 +396,7 @@ export const unpublishArticleItem = async (id: string, userId: string) => {
     const aiUserId = await getAiUserId();
     const [unpublishedArticle] = await db
         .update(articles)
-        .set({ publishedAt: null, isPinned: false, updatedAt: new Date() })
+        .set({ publishedAt: null, isPinned: false, showOnHome: false, updatedAt: new Date() })
         .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
         .returning();
 
@@ -418,17 +418,68 @@ export const unpublishArticleItem = async (id: string, userId: string) => {
  */
 export const pinArticleItem = async (id: string, pinned: boolean, userId: string) => {
     const aiUserId = await getAiUserId();
-    const [pinnedArticle] = await db
-        .update(articles)
-        .set({ isPinned: pinned, updatedAt: new Date() })
-        .where(and(eq(articles.id, id), or(eq(articles.userId, userId), eq(articles.userId, aiUserId))))
-        .returning();
+    const ownerScope = or(eq(articles.userId, userId), eq(articles.userId, aiUserId));
+    const now = new Date();
+
+    const { pinnedArticle, previouslyPinned } = await db.transaction(async (tx) => {
+        const previouslyPinned = pinned
+            ? await tx
+                .select({ id: articles.id, slug: articles.slug })
+                .from(articles)
+                .where(and(ownerScope, eq(articles.isPinned, true)))
+            : [];
+
+        if (pinned) {
+            await tx
+                .update(articles)
+                .set({ isPinned: false, updatedAt: now })
+                .where(and(ownerScope, eq(articles.isPinned, true)));
+        }
+
+        const [pinnedArticle] = await tx
+            .update(articles)
+            .set({ isPinned: pinned, updatedAt: now })
+            .where(and(eq(articles.id, id), ownerScope, isNotNull(articles.publishedAt)))
+            .returning();
+
+        return { pinnedArticle, previouslyPinned };
+    });
 
     if (pinnedArticle) {
         await invalidateArticleCache(pinnedArticle, userId);
+        await Promise.all(
+            previouslyPinned
+                .filter((item) => item.id !== pinnedArticle.id)
+                .map((item) => invalidateArticleCache(item, userId)),
+        );
     }
 
     return pinnedArticle;
+};
+
+/**
+ * 设置文章是否展示在首页文章区。
+ * 只有已发布文章允许展示在首页；取消发布时会自动移出首页。
+ */
+export const setArticleHomeVisibility = async (id: string, showOnHome: boolean, userId: string) => {
+    const aiUserId = await getAiUserId();
+    const conditions = [
+        eq(articles.id, id),
+        or(eq(articles.userId, userId), eq(articles.userId, aiUserId)),
+    ];
+    if (showOnHome) conditions.push(isNotNull(articles.publishedAt));
+
+    const [updatedArticle] = await db
+        .update(articles)
+        .set({ showOnHome, updatedAt: new Date() })
+        .where(and(...conditions))
+        .returning();
+
+    if (updatedArticle) {
+        await invalidateArticleCache(updatedArticle, userId);
+    }
+
+    return updatedArticle;
 };
 
 /**
@@ -446,14 +497,33 @@ export const queryPublishedArticles = async () => {
         return JSON.parse(cached);
     }
 
+    // 单人博客：公开列表只展示站长本人的已发布文章
+    const { getSiteOwnerId } = await import("../site/service");
+    const ownerId = await getSiteOwnerId();
+    const conditions = [isNull(articles.deleteAt), isNotNull(articles.publishedAt)];
+    if (ownerId) conditions.push(eq(articles.userId, ownerId));
+
     const publishedList = await db
         .select()
         .from(articles)
-        .where(and(isNull(articles.deleteAt), isNotNull(articles.publishedAt)))
+        .where(and(...conditions))
         .orderBy(desc(articles.isPinned), desc(articles.publishedAt));
-        
+
     await redis.setex(cacheKey, 3600, JSON.stringify(publishedList));
     return publishedList;
+};
+
+/**
+ * 查询最新 N 篇已发布文章（首页 Latest Articles 区用）。
+ * 复用公开列表（已按置顶+发布时间排序、已锁定站长），取前 limit 篇。
+ *
+ * @param limit - 返回篇数，默认 3
+ */
+export const queryLatestPublishedArticles = async (limit = 3) => {
+    const list = (await queryPublishedArticles()) as (typeof articles.$inferSelect)[];
+    const selected = list.filter((article) => article.showOnHome);
+    const fallback = list.filter((article) => !article.showOnHome);
+    return [...selected, ...fallback].slice(0, limit);
 };
 
 /**
@@ -678,6 +748,4 @@ export const generateArticleEmbedding = async (articleId: string) => {
     }
     await db.insert(articleChunks).values(rows);
 };
-
-
 

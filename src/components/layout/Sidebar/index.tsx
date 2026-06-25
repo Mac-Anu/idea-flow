@@ -2,14 +2,13 @@
 
 import {
     Search,
-    Settings,
     Trash2,
     Plus,
-    ChevronDown,
     FileText,
     MoreHorizontal,
-    PenSquare,
     Home,
+    FolderGit2,
+    UserCog,
     Sun,
     Moon,
     Bot,
@@ -106,6 +105,10 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                                 article.id === activeArticleId
                                     ? activeArticleTitle || "新页面"
                                     : article.title || "新页面";
+                            const articleSubject = {
+                                __caslSubjectType__: "Article" as const,
+                                userId: article.userId,
+                            };
                             return (
                                 <Link key={article.id} href={`/articles/${article.id}`}>
                                     <div
@@ -146,7 +149,7 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
                                                     {isActive ? "当前编辑中" : "点击查看与编辑"}
                                                 </p>
                                              </div>
-                                            {ability?.can("delete", { __caslSubjectType__: "Article", userId: article.userId } as any) && (
+                                            {ability?.can("delete", articleSubject) && (
                                                 <button
                                                     onClick={(e) => handleDeleteArticle(e, article.id)}
                                                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0 self-center"
@@ -185,6 +188,8 @@ export const Sidebar = ({ articles }: { articles: Article[] }) => {
             <div className="border-t border-border px-4 py-4">
                 <div className="space-y-1">
                     <SidebarLink icon={<Home size={15} />} label="返回首页" href="/" />
+                    <SidebarLink icon={<FolderGit2 size={15} />} label="项目管理" href="/manage/projects" />
+                    <SidebarLink icon={<UserCog size={15} />} label="站点 Profile" href="/manage/profile" />
                     <button
                         onClick={() => setIsTrashOpen(true)}
                         className="w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-accent/50 hover:text-foreground"

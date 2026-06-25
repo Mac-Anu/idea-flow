@@ -1,12 +1,7 @@
-import { Hono } from "hono";
-import { db } from "@/db";
-import { articles } from "@/db/schema";
-import { desc, eq, isNull, isNotNull } from "drizzle-orm";
 import { isNil } from "lodash";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createArticleSchema, updateArticleSchema, publishArticleSchema, pinArticleSchema } from "./schema";
+import { createArticleSchema, updateArticleSchema, publishArticleSchema, pinArticleSchema, homeArticleSchema } from "./schema";
 import { describeRoute } from "hono-openapi";
 import {
     create201SuccessResponse,
@@ -21,7 +16,6 @@ import {
     queryArticleId,
     queryArticleItem,
     queryArticleList,
-    queryArticleSlug,
     updateArticleItem,
     queryArticleTrashList,
     restoreArticleItem,
@@ -30,10 +24,13 @@ import {
     publishArticleItem,
     unpublishArticleItem,
     pinArticleItem,
+    setArticleHomeVisibility,
     queryPublishedArticles,
 } from "./service";
 import { createHonoApp } from "../common/app";
 import { AuthProtectedMiddleware } from "../user/middlwares";
+import { RbacContextMiddleware, createPermissionGuard } from "../rbac/middleware";
+
 export const articleTags = ["文章操作"];
 export const articleApi = createHonoApp()
     .get(
@@ -53,7 +50,7 @@ export const articleApi = createHonoApp()
                 const userId = c.get("user")!.id;
                 const data = await queryArticleList(userId);
                 return c.json({ data });
-            } catch (error) {
+            } catch {
                 return c.json({ message: "查询文章列表失败" }, 500);
             }
         },
@@ -73,7 +70,7 @@ export const articleApi = createHonoApp()
             try {
                 const data = await queryPublishedArticles();
                 return c.json({ data });
-            } catch (error) {
+            } catch {
                 return c.json({ message: "查询公开文章失败" }, 500);
             }
         },
@@ -97,7 +94,7 @@ export const articleApi = createHonoApp()
                 const userId = c.get("user")!.id;
                 const articles = await searchArticles(query, titleOnly, userId);
                 return c.json({ articles });
-            } catch (error) {
+            } catch {
                 return c.json({ message: "搜索文章失败" }, 500);
             }
         },
@@ -116,14 +113,8 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
-        async (c, next) => {
-            const { RbacContextMiddleware } = await import("../rbac/middleware");
-            return RbacContextMiddleware(c as any, next);
-        },
-        async (c, next) => {
-            const { createPermissionGuard } = await import("../rbac/middleware");
-            return createPermissionGuard({ action: 'create', subject: 'Article' })(c as any, next);
-        },
+        RbacContextMiddleware,
+        createPermissionGuard({ action: "create", subject: "Article" }),
         async (c) => {
             const data = await c.req.valid("json");
             const userId = c.get("user")!.id;
@@ -147,19 +138,12 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
-        async (c, next) => {
-            const { RbacContextMiddleware } = await import("../rbac/middleware");
-            return RbacContextMiddleware(c as any, next);
-        },
-        async (c, next) => {
-            const { createPermissionGuard } = await import("../rbac/middleware");
-            const { queryArticleId } = await import("./service");
-            return createPermissionGuard({
-                action: 'update',
-                subject: 'Article',
-                getSubject: async (c) => await queryArticleId(c.req.param("id"))
-            })(c as any, next);
-        },
+        RbacContextMiddleware,
+        createPermissionGuard({
+            action: "update",
+            subject: "Article",
+            getSubject: async (c) => await queryArticleId(c.req.param("id")),
+        }),
         async (c) => {
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
@@ -182,19 +166,12 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
-        async (c, next) => {
-            const { RbacContextMiddleware } = await import("../rbac/middleware");
-            return RbacContextMiddleware(c as any, next);
-        },
-        async (c, next) => {
-            const { createPermissionGuard } = await import("../rbac/middleware");
-            const { queryArticleId } = await import("./service");
-            return createPermissionGuard({
-                action: 'delete',
-                subject: 'Article',
-                getSubject: async (c) => await queryArticleId(c.req.param("id"))
-            })(c as any, next);
-        },
+        RbacContextMiddleware,
+        createPermissionGuard({
+            action: "delete",
+            subject: "Article",
+            getSubject: async (c) => await queryArticleId(c.req.param("id")),
+        }),
         async (c) => {
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
@@ -237,7 +214,7 @@ export const articleApi = createHonoApp()
                 const userId = c.get("user")!.id;
                 const tags = await queryAllTags(userId);
                 return c.json({ tags });
-            } catch (error) {
+            } catch {
                 return c.json({ message: "查询标签失败" }, 500);
             }
         },
@@ -260,7 +237,7 @@ export const articleApi = createHonoApp()
                 const article = await queryArticleItem(item);
                 if (isNil(article)) return c.json({ message: "文章不存在" }, 404);
                 return c.json({ article });
-            } catch (error) {
+            } catch {
                 return c.json({ message: "查询文章详情失败" }, 500);
             }
         },
@@ -325,24 +302,46 @@ export const articleApi = createHonoApp()
             },
         }),
         AuthProtectedMiddleware,
-        async (c, next) => {
-            const { RbacContextMiddleware } = await import("../rbac/middleware");
-            return RbacContextMiddleware(c as any, next);
-        },
-        async (c, next) => {
-            const { createPermissionGuard } = await import("../rbac/middleware");
-            const { queryArticleId } = await import("./service");
-            return createPermissionGuard({
-                action: 'update',
-                subject: 'Article',
-                getSubject: async (c) => await queryArticleId(c.req.param("id"))
-            })(c as any, next);
-        },
+        RbacContextMiddleware,
+        createPermissionGuard({
+            action: "update",
+            subject: "Article",
+            getSubject: async (c) => await queryArticleId(c.req.param("id")),
+        }),
         async (c) => {
             const id = c.req.param("id");
             const userId = c.get("user")!.id;
             const { pinned } = await c.req.valid("json");
             const article = await pinArticleItem(id, pinned, userId);
+            revalidatePath("/", "layout");
+            return c.json({ article });
+        },
+    )
+    .patch(
+        "/:id/home",
+        zValidator("json", homeArticleSchema),
+        describeRoute({
+            tags: articleTags,
+            summary: "首页展示/取消展示文章",
+            description: "控制已发布文章是否出现在首页最新文章区；未发布文章不能加入首页展示",
+            responses: {
+                ...createSuccessResponse(createArticleSchema),
+                ...createNotFoundErrorResponse("文章不存在"),
+                ...createServerErrorResponse("首页展示操作失败"),
+            },
+        }),
+        AuthProtectedMiddleware,
+        RbacContextMiddleware,
+        createPermissionGuard({
+            action: "update",
+            subject: "Article",
+            getSubject: async (c) => await queryArticleId(c.req.param("id")),
+        }),
+        async (c) => {
+            const id = c.req.param("id");
+            const userId = c.get("user")!.id;
+            const { showOnHome } = await c.req.valid("json");
+            const article = await setArticleHomeVisibility(id, showOnHome, userId);
             revalidatePath("/", "layout");
             return c.json({ article });
         },

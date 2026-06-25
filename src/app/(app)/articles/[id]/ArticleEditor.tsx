@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize, Pin, PinOff } from "lucide-react";
+import { Trash2, Plus, X, Globe, GlobeLock, Maximize, Minimize, Pin, PinOff, ImageIcon, Upload, Loader2, Home } from "lucide-react";
 import { TiptapEditor } from "@/components/article/editor/TiptapEditor";
 import { TableOfContents } from "@/components/article/editor/TableOfContents";
+import { GradientCover } from "@/components/home/GradientCover";
 import { useArticleEditor } from "@/components/article/hooks";
 import type { Article } from "@/server/articles/type";
 
@@ -13,32 +15,58 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
         title,
         content,
         tags,
-        isSaving,
-        saved,
+        imageUrl,
+        saveStatus,
         isPublished,
         isPublishing,
         isPinned,
         isPinning,
+        showOnHome,
+        isTogglingHome,
         headings,
         editor,
         titleRef,
         setTitle,
         setContent,
         setTags,
+        setImageUrl,
         setHeadings,
         setEditor,
         updateActiveArticleTitle,
         handleTitleKeyDown,
-        handleSave,
         handleDelete,
         handlePublish,
         handleUnpublish,
         handleTogglePin,
+        handleToggleHomeVisibility,
     } = useArticleEditor(article);
 
     const [isAddingTag, setIsAddingTag] = useState(false);
     const [newTag, setNewTag] = useState("");
     const [isFullWidth, setIsFullWidth] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const coverInputRef = useRef<HTMLInputElement>(null);
+
+    const uploadCover = async (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        setUploading(true);
+        try {
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                toast.error(err.error || "封面上传失败");
+                return;
+            }
+            const { url } = await res.json();
+            setImageUrl(url);
+            toast.success("封面已上传");
+        } catch {
+            toast.error("封面上传失败，请检查网络");
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleAddTag = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && newTag.trim()) {
@@ -72,6 +100,18 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                 </div>
 
                 <div className="flex items-center gap-3 self-start lg:self-auto">
+                    {/* 保存状态：让用户看得见。最关键是 error——失败了必须告诉用户，
+                        否则他以为存了、关掉页面这段就丢了 */}
+                    {saveStatus === "saving" && (
+                        <span className="text-sm text-muted-foreground">保存中…</span>
+                    )}
+                    {saveStatus === "saved" && (
+                        <span className="text-sm text-emerald-600 dark:text-emerald-400">已保存</span>
+                    )}
+                    {saveStatus === "error" && (
+                        <span className="text-sm font-medium text-destructive">保存失败，重试中…</span>
+                    )}
+
                     {/* 发布状态与按钮 */}
                     {isPublished ? (
                         <button
@@ -139,6 +179,25 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                         </button>
                     )}
 
+                    {/* 首页展示按钮：仅已发布文章可加入首页 */}
+                    {isPublished && (
+                        <button
+                            onClick={handleToggleHomeVisibility}
+                            disabled={isTogglingHome}
+                            className={cn(
+                                "flex items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all duration-200",
+                                showOnHome
+                                    ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                                    : "border-border text-muted-foreground hover:border-primary/30 hover:text-primary",
+                                isTogglingHome && "opacity-50 cursor-not-allowed",
+                            )}
+                            title={showOnHome ? "从首页移除" : "展示到首页文章区"}
+                        >
+                            <Home size={15} className={showOnHome ? "fill-current" : undefined} />
+                            {isTogglingHome ? "处理中..." : showOnHome ? "已在首页" : "首页展示"}
+                        </button>
+                    )}
+
                     <button
                         onClick={handleDelete}
                         className={cn(
@@ -179,6 +238,53 @@ export const ArticleEditor = ({ article, highlight }: { article: Article; highli
                         "text-foreground placeholder:text-muted-foreground/50",
                     )}
                 />
+
+                {/* 封面图：有图显示预览，可更换/移除；无图显示按标题生成的渐变占位 + 上传按钮 */}
+                <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadCover(f);
+                        e.target.value = "";
+                    }}
+                />
+                <div className="group relative mb-6 aspect-[16/7] w-full overflow-hidden rounded-2xl border border-border">
+                    {imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={imageUrl} alt="文章封面" className="h-full w-full object-cover" />
+                    ) : (
+                        <div className="relative h-full w-full">
+                            <GradientCover seed={article.slug || article.id || title} />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-white/90">
+                                <ImageIcon className="h-7 w-7" />
+                                <span className="text-sm">默认封面（按标题生成）</span>
+                            </div>
+                        </div>
+                    )}
+                    {/* 悬停操作层 */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                            onClick={() => coverInputRef.current?.click()}
+                            disabled={uploading}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-black shadow transition hover:bg-white disabled:opacity-60"
+                        >
+                            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                            {uploading ? "上传中…" : imageUrl ? "更换封面" : "上传封面"}
+                        </button>
+                        {imageUrl && (
+                            <button
+                                onClick={() => setImageUrl("")}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-black shadow transition hover:bg-white"
+                            >
+                                <X className="h-4 w-4" />
+                                移除
+                            </button>
+                        )}
+                    </div>
+                </div>
 
                 <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     {tags.map((tag) => (

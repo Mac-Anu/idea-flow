@@ -85,11 +85,21 @@ const authSignInHandler = (request: NextRequest) => {
         const isAuthenticated = checkIsAuthenticated(request);
 
         if (isAuthenticated) {
-            // 获取回调地址，没有则跳首页
             const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
-            const redirectUrl = new URL(isNil(callbackUrl) ? "/" : callbackUrl, request.url);
 
-            return NextResponse.redirect(redirectUrl);
+            // 带着 callbackUrl 来的，说明是「刚登录成功、要回原来想去的页」这种正常流程，放心跳。
+            if (!isNil(callbackUrl)) {
+                return NextResponse.redirect(new URL(callbackUrl, request.url));
+            }
+
+            // 没有 callbackUrl，却又「看起来已登录」还主动来点登录页——这本身就可疑：
+            // 最常见的就是浏览器里揣着一张已过期的死 Cookie。middleware 为了快只查 Cookie 在不在、
+            // 不验真假，会把这种用户误判成已登录，无脑弹回首页，结果人永远进不来登录页（死循环）。
+            // 这里不再无脑弹首页，而是放行登录页 + 顺手抹掉这张死 Cookie，给用户一条活路。
+            const response = NextResponse.next();
+            response.cookies.delete("better-auth.session_token");
+            response.cookies.delete("__Secure-better-auth.session_token");
+            return response;
         }
 
         // 用户未认证，继续处理请求 (允许看登录页/注册页)

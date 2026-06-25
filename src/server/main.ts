@@ -1,4 +1,6 @@
 import { articleApi } from "./articles/route";
+import { projectApi } from "./projects/route";
+import { siteApi } from "./site/route";
 import { createHonoApp } from "./common/app";
 import { swaggerUI } from "@hono/swagger-ui";
 import { Scalar } from "@scalar/hono-api-reference";
@@ -19,6 +21,8 @@ app.onError((err, c) => {
 });
 const routes = app
     .route("/articles", articleApi)
+    .route("/projects", projectApi)
+    .route("/site", siteApi)
     .route("/tags", tagRoutes)
     .route("/auth", authRoutes)
     .route("/agent", agentApi)
